@@ -101,7 +101,6 @@ export const meetingsRouter = createTRPCRouter({
                 })
                 .returning();
 
-
             const call = streamVideo.video.call("default", createdMeeting.id);
             await call.create({
                 data: {
@@ -127,7 +126,7 @@ export const meetingsRouter = createTRPCRouter({
                 .select()
                 .from(agents)
                 .where(eq(agents.id, createdMeeting.agentId));
-            
+
             if (!existingAgent) {
                 throw new TRPCError({
                     code: "NOT_FOUND",
@@ -143,7 +142,7 @@ export const meetingsRouter = createTRPCRouter({
                     image: generateAvatarUri({
                         seed: existingAgent.name,
                         variant: "botttsNeutral",
-                    })
+                    }),
                 },
             ]);
 
