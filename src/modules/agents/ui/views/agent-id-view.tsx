@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 import { UpdateAgentDialog } from "../components/update-agent-dialog";
 
 interface Props {
@@ -63,7 +64,7 @@ export const AgentIdView = ({ agentId }: Props) => {
     return (
         <>
             <RemoveConfirmation />
-            <UpdateAgentDialog 
+            <UpdateAgentDialog
                 open={updateAgentDialogOpen}
                 onOpenChange={setUpdateAgentDialogOpen}
                 initialValues={data}
@@ -100,9 +101,11 @@ export const AgentIdView = ({ agentId }: Props) => {
                                 {" "}
                                 Instructions{" "}
                             </p>
-                            <p className="text-neutral-800">
-                                {data.instructions}
-                            </p>
+                            <div className="prose max-w-none text-neutral-800">
+                                <ReactMarkdown>
+                                    {data.instructions}
+                                </ReactMarkdown>
+                            </div>
                         </div>
                     </div>
                 </div>

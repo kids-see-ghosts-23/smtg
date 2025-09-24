@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AgentGetOne } from "../../types";
 import { useTRPC } from "@/trpc/client";
 import { useRouter } from "next/navigation";
@@ -34,8 +35,8 @@ export const AgentForm = ({
     initialValues,
 }: AgentFormProps) => {
     const trpc = useTRPC();
-
     const queryClient = useQueryClient();
+    const router = useRouter();
 
     const createAgent = useMutation(
         trpc.agents.create.mutationOptions({
@@ -43,12 +44,13 @@ export const AgentForm = ({
                 await queryClient.invalidateQueries(
                     trpc.agents.getMany.queryOptions({})
                 );
-                // invalidate free tier usage here as well
                 onSuccess?.();
             },
             onError: (error) => {
                 toast.error(error.message);
-                // if error is forbidden redirect to "/upgrade" so that they can pay
+                if (error.message.includes("forbidden")) {
+                    router.push("/upgrade");
+                }
             },
         })
     );
@@ -70,7 +72,9 @@ export const AgentForm = ({
             },
             onError: (error) => {
                 toast.error(error.message);
-                // if error is forbidden redirect to "/upgrade" so that they can pay
+                if (error.message.includes("forbidden")) {
+                    router.push("/upgrade");
+                }
             },
         })
     );
@@ -85,6 +89,71 @@ export const AgentForm = ({
 
     const isEdit = !!initialValues?.id;
     const isPending = createAgent.isPending || updateAgent.isPending;
+
+    const [isEnhancing, setIsEnhancing] = useState(false);
+    const [hasEnhanced, setHasEnhanced] = useState(false); 
+
+    // Handle Groq API call to enhance instructions
+    const enhanceInstructions = async () => {
+        const name = form.watch("name");
+        const currentInstructions = form.watch("instructions");
+
+        if (!name.trim()) {
+            toast.warning("Please enter a name first.");
+            return;
+        }
+
+        setIsEnhancing(true);
+
+        try {
+            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", { 
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
+                },
+                body: JSON.stringify({
+                    model: "llama-3.3-70b-versatile",
+                    messages: [
+                        {
+                            role: "system",
+                            content: "You are an expert at crafting clear, effective, and engaging AI agent instructions. Improve the following agent description to be more precise, helpful, and structured. RETURN ONLY AND ONLY THE ENHANCED PROMPT, NO CONVERSATIONAL FILLER.",
+                        },
+                        {
+                            role: "user",
+                            content: `The agent's name is "${name}". Currently, its instructions are: "${currentInstructions || 'No instructions provided.'}". 
+                            Enhance these instructions to make them highly effective for an AI assistant. Be concise, professional, and action-oriented. `,
+                        },
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 500,
+                }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || "Failed to enhance prompt.");
+            }
+
+            const data = await response.json();
+            const enhancedText = data.choices[0]?.message?.content?.trim();
+
+            if (enhancedText) {
+                form.setValue("instructions", enhancedText);
+                toast.success("Prompt enhanced successfully!");
+                setHasEnhanced(true); 
+                throw new Error("Empty response from Groq.");
+            }
+        } catch (error: any) {
+            console.error("Groq enhancement failed:", error);
+            toast.error(
+                error.message ||
+                    "Failed to enhance prompt. Check your Groq API key and try again."
+            );
+        } finally {
+            setIsEnhancing(false);
+        }
+    };
 
     const onSubmit = (values: z.infer<typeof agentsInsertSchema>) => {
         if (isEdit) {
@@ -107,7 +176,7 @@ export const AgentForm = ({
                     control={form.control}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel> Name </FormLabel>
+                            <FormLabel>Name</FormLabel>
                             <FormControl>
                                 <Input
                                     {...field}
@@ -123,12 +192,29 @@ export const AgentForm = ({
                     control={form.control}
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel> Instructions </FormLabel>
+                            <FormLabel>Instructions</FormLabel>
                             <FormControl>
-                                <Textarea
-                                    {...field}
-                                    placeholder="You are a helpful tutor that teaches smtg"
-                                />
+                                <div className="relative">
+                                    <Textarea
+                                        {...field}
+                                        placeholder="You are a helpful tutor that teaches smtg"
+                                        className="min-h-[120px] max-h-[300px] overflow-y-auto resize-none border border-input bg-background rounded-md shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                    />
+                                    
+                                    {!hasEnhanced && !isEnhancing && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="absolute bottom-2 right-2"
+                                            disabled={isPending}
+                                            onClick={enhanceInstructions}
+                                        >
+                                            Enhance Prompt
+                                        </Button>
+                                    )}
+                                    
+                                </div>
                             </FormControl>
                             <FormMessage />
                         </FormItem>
