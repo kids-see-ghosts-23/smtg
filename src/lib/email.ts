@@ -10,7 +10,7 @@ interface EmailOptions {
 export class EmailService {
     private transporter: nodemailer.Transporter;
     constructor() {
-        this.transporter = nodemailer.createTransport({
+        this.transporter = nodemailer.createTransporter({
             service: "gmail", // or your preferred email service
             auth: {
                 user: process.env.EMAIL_USER, // Your email
@@ -102,32 +102,33 @@ export class EmailService {
             .meta-info { 
               display: flex;
               flex-wrap: wrap;
-              gap: 25px;
+              gap: 30px;
               margin: 0;
               width: 100%;
+              align-items: flex-start;
             }
             .meta-item {
-              display: flex;
-              flex-direction: column;
-              gap: 6px;
-              min-width: 120px;
-              flex: 1;
+              display: block;
+              min-width: 140px;
+              flex: 0 1 auto;
             }
             .meta-label {
               color: rgba(255, 255, 255, 0.85);
-              font-size: 12px;
-              font-weight: 500;
+              font-size: 11px;
+              font-weight: 600;
               text-transform: uppercase;
-              letter-spacing: 0.5px;
-              margin: 0;
+              letter-spacing: 0.8px;
+              margin: 0 0 8px 0;
               line-height: 1.2;
+              display: block;
             }
             .meta-value {
               color: white;
               font-weight: 600;
-              font-size: 15px;
+              font-size: 16px;
               margin: 0;
-              line-height: 1.3;
+              line-height: 1.4;
+              display: block;
             }
             .content-section {
               padding: 45px 40px;
@@ -283,10 +284,11 @@ export class EmailService {
               .meeting-title { font-size: 24px; }
               .meta-info { 
                 flex-direction: column;
-                gap: 15px; 
+                gap: 20px; 
               }
               .meta-item {
                 min-width: auto;
+                margin-bottom: 5px;
               }
             }
             @media (max-width: 480px) {
