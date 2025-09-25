@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { CommandSelect } from "@/components/command-select";
 import { NewAgentDialog } from "@/modules/agents/ui/components/new-agent-dialog";
+import { MeetingJoinLink } from "./meeting-join-link";
 
 interface MeetingFormProps {
     onSuccess?: (id?: string) => void;
@@ -40,6 +41,7 @@ export const MeetingForm = ({
 
     const [openNewAgentDialog, setOpenNewAgentDialog] = useState(false);
     const [agentSearch, setAgentSearch] = useState("");
+    const [createdMeetingId, setCreatedMeetingId] = useState<string | null>(null);
 
     const agents = useQuery(
         trpc.agents.getMany.queryOptions({
@@ -54,8 +56,9 @@ export const MeetingForm = ({
                 await queryClient.invalidateQueries(
                     trpc.meetings.getMany.queryOptions({})
                 );
-                // invalidate free tier usage here as well
-                onSuccess?.(data.id);
+                // Set the created meeting ID to show the join link
+                setCreatedMeetingId(data.id);
+                // Don't call onSuccess yet, wait for user to acknowledge the join link
             },
             onError: (error) => {
                 toast.error(error.message);
@@ -104,6 +107,34 @@ export const MeetingForm = ({
             createMeeting.mutate(values);
         }
     };
+
+    const handleContinue = () => {
+        if (createdMeetingId) {
+            onSuccess?.(createdMeetingId);
+        }
+    };
+
+    // If we just created a meeting, show the join link
+    if (createdMeetingId) {
+        return (
+            <div className="space-y-6">
+                <div className="text-center">
+                    <h3 className="text-lg font-medium">Meeting Created Successfully!</h3>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Share this link with others to allow them to join the meeting
+                    </p>
+                </div>
+                
+                <MeetingJoinLink meetingId={createdMeetingId} />
+                
+                <div className="flex justify-end">
+                    <Button onClick={handleContinue}>
+                        Continue to Meeting
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <>  
