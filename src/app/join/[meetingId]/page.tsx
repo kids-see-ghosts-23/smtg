@@ -22,12 +22,9 @@ export default function JoinMeetingPage({ params }: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [meetingName, setMeetingName] = useState("");
-  
-  // Unwrap the params promise
   const unwrappedParams = use(params);
 
   useEffect(() => {
-    // Fetch meeting details to display meeting name
     const fetchMeetingDetails = async () => {
       try {
         const response = await fetch(`/api/meetings/${unwrappedParams.meetingId}`);
@@ -54,22 +51,17 @@ export default function JoinMeetingPage({ params }: Props) {
     setError("");
 
     try {
-      // Create guest user and get token via server action
       const result = await createGuestUserAndToken(name.trim());
       
       if (!result.success) {
         throw new Error(result.error);
       }
-
-      // Store user info in localStorage
-      localStorage.setItem("guestUser", JSON.stringify({
+      localStorage.setItem(`guestUser_${unwrappedParams.meetingId}`, JSON.stringify({
         id: result.userId,
         name: name.trim(),
         token: result.token,
         meetingId: unwrappedParams.meetingId,
       }));
-
-      // Redirect to the call page
       router.push(`/call/${unwrappedParams.meetingId}`);
     } catch (err) {
       console.error("Failed to join meeting:", err);
@@ -78,7 +70,6 @@ export default function JoinMeetingPage({ params }: Props) {
       setIsLoading(false);
     }
   };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !isLoading) {
       handleJoin();

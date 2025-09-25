@@ -13,18 +13,23 @@ interface Props {
 export const CallProvider = ({ meetingId, meetingName }: Props) => {
     const { data, isPending } = authClient.useSession();
     
-    // Check if this is a guest user
-    const guestUser = typeof window !== 'undefined' ? localStorage.getItem("guestUser") : null;
+    // Check if this is a guest user for this specific meeting
+    const guestUser = typeof window !== 'undefined' ? localStorage.getItem(`guestUser_${meetingId}`) : null;
     
     if (guestUser) {
         const userData = JSON.parse(guestUser);
+        const userImage = userData.image ?? generateAvatarUri({ 
+            seed: userData.name, 
+            variant: "initials" 
+        });
+        
         return (
             <CallConnect
                 meetingId={meetingId}
                 meetingName={meetingName}
                 userId={userData.id}
                 userName={userData.name}
-                userImage={userData.image}
+                userImage={userImage}
             />
         );
     }

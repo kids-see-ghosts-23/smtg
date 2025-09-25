@@ -56,7 +56,7 @@ export const meetingsRouter = createTRPCRouter({
             if (!existingMeeting) {
                 throw new TRPCError({
                     code: "NOT_FOUND",
-                    message: "Agent not found",
+                    message: "Meeting not found",
                 });
             }
 
@@ -104,8 +104,17 @@ export const meetingsRouter = createTRPCRouter({
                         }),
                     }))
                 );
+            const guestSpeakerIds = speakerIds.filter(id => id.startsWith('guest-'));
+            const guestSpeakers = guestSpeakerIds.map(id => ({
+                id,
+                name: `Guest User`,
+                image: generateAvatarUri({
+                    seed: id,
+                    variant: "initials",
+                }),
+            }));
 
-            const speakers = [...userSpeakers, ...agentSpeakers];
+            const speakers = [...userSpeakers, ...agentSpeakers, ...guestSpeakers];
             const transcriptWithSpeakers = transcript.map((item) => {
                 const speaker = speakers.find(
                     (speaker) => speaker.id === item.speaker_id
@@ -115,7 +124,7 @@ export const meetingsRouter = createTRPCRouter({
                     return {
                         ...item,
                         user: {
-                            name: "Unknown",
+                            name: "Unknown Speaker",
                             image: generateAvatarUri({
                                 seed: "Unknown",
                                 variant: "initials",
