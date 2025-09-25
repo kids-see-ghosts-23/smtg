@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import { AgentGetOne } from "../../types";
 import { useTRPC } from "@/trpc/client";
 import { useRouter } from "next/navigation";
@@ -15,7 +15,6 @@ import { GeneratedAvatar } from "@/components/generated-avatar";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -91,7 +90,7 @@ export const AgentForm = ({
     const isPending = createAgent.isPending || updateAgent.isPending;
 
     const [isEnhancing, setIsEnhancing] = useState(false);
-    const [hasEnhanced, setHasEnhanced] = useState(false); 
+    const [hasEnhanced, setHasEnhanced] = useState(false);
 
     // Handle Groq API call to enhance instructions
     const enhanceInstructions = async () => {
@@ -106,33 +105,42 @@ export const AgentForm = ({
         setIsEnhancing(true);
 
         try {
-            const response = await fetch("https://api.groq.com/openai/v1/chat/completions", { 
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
-                },
-                body: JSON.stringify({
-                    model: "llama-3.3-70b-versatile",
-                    messages: [
-                        {
-                            role: "system",
-                            content: "You are an expert at crafting clear, effective, and engaging AI agent instructions. Improve the following agent description to be more precise, helpful, and structured. RETURN ONLY AND ONLY THE ENHANCED PROMPT, NO CONVERSATIONAL FILLER.",
-                        },
-                        {
-                            role: "user",
-                            content: `The agent's name is "${name}". Currently, its instructions are: "${currentInstructions || 'No instructions provided.'}". 
+            const response = await fetch(
+                "https://api.groq.com/openai/v1/chat/completions",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: "llama-3.3-70b-versatile",
+                        messages: [
+                            {
+                                role: "system",
+                                content:
+                                    "You are an expert at crafting clear, effective, and engaging AI agent instructions. Improve the following agent description to be more precise, helpful, and structured. RETURN ONLY AND ONLY THE ENHANCED PROMPT, NO CONVERSATIONAL FILLER.",
+                            },
+                            {
+                                role: "user",
+                                content: `The agent's name is "${name}". Currently, its instructions are: "${
+                                    currentInstructions ||
+                                    "No instructions provided."
+                                }". 
                             Enhance these instructions to make them highly effective for an AI assistant. Be concise, professional, and action-oriented. `,
-                        },
-                    ],
-                    temperature: 0.7,
-                    max_tokens: 500,
-                }),
-            });
+                            },
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 500,
+                    }),
+                }
+            );
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.error?.message || "Failed to enhance prompt.");
+                throw new Error(
+                    errorData.error?.message || "Failed to enhance prompt."
+                );
             }
 
             const data = await response.json();
@@ -141,15 +149,19 @@ export const AgentForm = ({
             if (enhancedText) {
                 form.setValue("instructions", enhancedText);
                 toast.success("Prompt enhanced successfully!");
-                setHasEnhanced(true); 
+                setHasEnhanced(true);
                 throw new Error("Empty response from Groq.");
             }
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Groq enhancement failed:", error);
-            toast.error(
-                error.message ||
+
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error(
                     "Failed to enhance prompt. Check your Groq API key and try again."
-            );
+                );
+            }
         } finally {
             setIsEnhancing(false);
         }
@@ -200,7 +212,7 @@ export const AgentForm = ({
                                         placeholder="You are a helpful tutor that teaches smtg"
                                         className="min-h-[120px] max-h-[300px] overflow-y-auto resize-none border border-input bg-background rounded-md shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                     />
-                                    
+
                                     {!hasEnhanced && !isEnhancing && (
                                         <Button
                                             type="button"
@@ -213,7 +225,6 @@ export const AgentForm = ({
                                             Enhance Prompt
                                         </Button>
                                     )}
-                                    
                                 </div>
                             </FormControl>
                             <FormMessage />

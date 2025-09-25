@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { AgentsGetMany } from "../../types";
 import { GeneratedAvatar } from "@/components/generated-avatar";
-import { CornerDownRightIcon, VideoIcon, VoteIcon } from "lucide-react";
+import { CornerDownRightIcon, VideoIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 // This type is used to define the shape of our data.

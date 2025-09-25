@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 import { LoadingState } from "@/components/loading-state";
 
 import { useTRPC } from "@/trpc/client";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { columns } from "../components/columns";
 import { useAgentsFilters } from "../../hooks/use-agents-filters";

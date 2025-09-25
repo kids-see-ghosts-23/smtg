@@ -3,7 +3,6 @@ import { db } from "@/db";
 import { agents, meetings, user } from "@/db/schema";
 import {
     createTRPCRouter,
-    baseProcedure,
     protectedProcedure,
 } from "@/trpc/init";
 import {

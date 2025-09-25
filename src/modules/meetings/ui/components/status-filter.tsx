@@ -1,9 +1,7 @@
 import {
-    CircleCheck,
     CircleCheckIcon,
     CircleXIcon,
     ClockArrowUpIcon,
-    Loader,
     LoaderIcon,
     VideoIcon,
 } from "lucide-react";

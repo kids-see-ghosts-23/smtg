@@ -5,12 +5,11 @@ import { useForm } from "react-hook-form";
 import { OctagonAlertIcon } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FaGithub, FaGoogle } from "react-icons/fa";
-
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
     Form,
     FormControl,
-    FormDescription,
     FormField,
     FormItem,
     FormLabel,
@@ -18,10 +17,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { authClient } from "@/lib/auth-client";
 
-import { Space_Mono } from "next/font/google";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -251,10 +249,11 @@ export const SignUpView = () => {
                     </Form>
 
                     <div className="bg-radial from-sidebar-accent to-sidebar relative md:flex flex-col gap-y-4 items-center justify-center">
-                        <img
+                        <Image
                             src="/logo.svg"
                             alt="image"
-                            className="h-[92px] w-[92px]"
+                            width={92}
+                            height={92}
                         />
                         <p className="text-2xl font-semibold text-white">
                             Smtg

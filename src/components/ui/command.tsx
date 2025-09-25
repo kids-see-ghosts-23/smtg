@@ -11,18 +11,15 @@ import {
     DialogContent,
     DialogDescription,
     DialogHeader,
-    DialogTitle,
+    DialogTitle
 } from "@/components/ui/dialog";
 
 import {
     Drawer,
-    DrawerClose,
     DrawerContent,
     DrawerDescription,
-    DrawerFooter,
     DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
+    DrawerTitle
 } from "@/components/ui/drawer";
 
 function Command({

@@ -1,5 +1,4 @@
 "use client";
-import { user } from "@/db/schema";
 import { useTRPC } from "@/trpc/client";
 import {
     Call,

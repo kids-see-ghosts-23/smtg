@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
 import { TRPCReactProvider } from "@/trpc/client";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";

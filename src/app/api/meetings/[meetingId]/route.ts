@@ -5,9 +5,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { meetingId: string } }
+  context: { params: Promise<{ meetingId: string }> }
 ) {
   try {
+    const params = await context.params;
     const [meeting] = await db
       .select({
         id: meetings.id,

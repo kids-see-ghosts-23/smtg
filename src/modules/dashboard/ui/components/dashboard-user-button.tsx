@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
     Drawer,
-    DrawerClose,
     DrawerContent,
     DrawerDescription,
     DrawerFooter,
@@ -21,7 +20,6 @@ import {
 
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { GeneratedAvatar } from "@/components/generated-avatar";
-import { Dropdown } from "react-day-picker";
 import { ChevronDownIcon, CreditCardIcon, LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";

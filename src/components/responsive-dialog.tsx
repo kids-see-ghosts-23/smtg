@@ -7,18 +7,14 @@ import {
     DialogDescription,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
 } from "@/components/ui/dialog";
 
 import {
     Drawer,
-    DrawerClose,
     DrawerContent,
     DrawerDescription,
-    DrawerFooter,
     DrawerHeader,
-    DrawerTitle,
-    DrawerTrigger,
+    DrawerTitle
 } from "@/components/ui/drawer";
 
 interface ResponsiveDialogProps {

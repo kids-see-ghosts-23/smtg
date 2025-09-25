@@ -1,6 +1,5 @@
 import { auth } from "@/lib/auth";
 import { initTRPC, TRPCError } from "@trpc/server";
-import { CarTaxiFront } from "lucide-react";
 import { headers } from "next/headers";
 import { cache } from "react";
 export const createTRPCContext = cache(async () => {
