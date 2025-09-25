@@ -63,17 +63,17 @@ export class EmailService {
               max-width: 800px; 
               margin: 0 auto; 
               padding: 20px; 
-              background-color: #f8fafc;
+              background-color: #f0fdf4;
             }
             .container {
               background: white;
               border-radius: 16px;
               overflow: hidden;
               box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
-              border: 1px solid #e2e8f0;
+              border: 1px solid #bbf7d0;
             }
             .header { 
-              background: linear-gradient(135deg, #1e40af 0%, #3730a3 50%, #1e3a8a 100%);
+              background: linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%);
               color: white;
               padding: 40px 40px 30px 40px; 
               position: relative;
@@ -165,7 +165,7 @@ export class EmailService {
               padding: 45px; 
             }
             .summary-title {
-              color: #1e293b;
+              color: #15803d;
               margin-bottom: 30px;
               font-size: 22px;
               font-weight: 700;
@@ -173,43 +173,43 @@ export class EmailService {
               align-items: center;
               gap: 12px;
               padding-bottom: 15px;
-              border-bottom: 3px solid #e2e8f0;
+              border-bottom: 3px solid #bbf7d0;
             }
             .summary-content h1 { 
-              color: #0f172a; 
+              color: #166534; 
               font-size: 26px; 
               margin: 28px 0 18px 0; 
               font-weight: 700;
-              border-bottom: 2px solid #e2e8f0;
+              border-bottom: 2px solid #bbf7d0;
               padding-bottom: 10px;
               letter-spacing: -0.025em;
             }
             .summary-content h2 { 
-              color: #1e293b; 
+              color: #15803d; 
               font-size: 22px; 
               margin: 24px 0 14px 0; 
               font-weight: 600;
             }
             .summary-content h3 { 
-              color: #334155; 
+              color: #16a34a; 
               font-size: 18px; 
               margin: 20px 0 12px 0; 
               font-weight: 600;
             }
             .summary-content h4 { 
-              color: #475569; 
+              color: #22c55e; 
               font-size: 16px; 
               margin: 18px 0 10px 0; 
               font-weight: 600;
             }
             .summary-content h5 { 
-              color: #64748b; 
+              color: #4ade80; 
               font-size: 15px; 
               margin: 16px 0 8px 0; 
               font-weight: 600;
             }
             .summary-content h6 { 
-              color: #64748b; 
+              color: #86efac; 
               font-size: 14px; 
               margin: 14px 0 6px 0; 
               font-weight: 600;
@@ -229,7 +229,7 @@ export class EmailService {
             }
             .summary-content ul li::before {
               content: "•";
-              color: #3b82f6;
+              color: #22c55e;
               font-weight: bold;
               position: absolute;
               margin-left: -20px;
@@ -247,71 +247,71 @@ export class EmailService {
             }
             .summary-content strong { 
               font-weight: 700; 
-              color: #0f172a;
+              color: #166534;
             }
             .summary-content em { 
               font-style: italic; 
-              color: #475569;
+              color: #15803d;
             }
             .summary-content del {
               text-decoration: line-through;
               color: #64748b;
             }
             .summary-content code { 
-              background: #f1f5f9; 
+              background: #dcfce7; 
               padding: 3px 8px; 
               border-radius: 6px; 
               font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
               font-size: 14px;
-              color: #dc2626;
-              border: 1px solid #e2e8f0;
+              color: #166534;
+              border: 1px solid #bbf7d0;
               font-weight: 500;
             }
             .summary-content pre {
-              background: #0f172a;
-              color: #f8fafc;
+              background: #166534;
+              color: #f0fdf4;
               padding: 20px;
               border-radius: 12px;
               overflow-x: auto;
               margin: 20px 0;
-              border: 1px solid #1e293b;
+              border: 1px solid #15803d;
             }
             .summary-content pre code {
               background: transparent;
-              color: #f8fafc;
+              color: #f0fdf4;
               padding: 0;
               border: none;
               font-size: 14px;
             }
             .summary-content blockquote { 
-              border-left: 4px solid #3b82f6; 
+              border-left: 4px solid #22c55e; 
               padding: 18px 24px; 
               margin: 24px 0; 
-              background: #f8fafc;
+              background: #f0fdf4;
               border-radius: 0 12px 12px 0;
               font-style: italic;
-              color: #475569;
+              color: #15803d;
               position: relative;
             }
             .summary-content a {
-              color: #3b82f6;
+              color: #22c55e;
               text-decoration: underline;
               font-weight: 500;
             }
             .summary-content a:hover {
-              color: #1d4ed8;
+              color: #166534;
             }
             .summary-content hr {
               border: none;
-              border-top: 2px solid #e2e8f0;
+              border-top: 2px solid #bbf7d0;
               margin: 32px 0;
             }
             .footer { 
-              background: #f8fafc;
+              background: #f0fdf4;
               padding: 30px 45px; 
-              border-top: 1px solid #e2e8f0; 
+              border-top: 1px solid #bbf7d0; 
               font-size: 13px; 
-              color: #64748b;
+              color: #15803d;
               text-align: center;
             }
             .footer p {
@@ -320,7 +320,7 @@ export class EmailService {
             .footer p:last-child {
               margin: 0;
               font-weight: 600;
-              color: #475569;
+              color: #166534;
             }
             .sparkle { 
               color: #f59e0b; 
@@ -393,7 +393,7 @@ export class EmailService {
         </body>
       </html>
     `;
-    }
+}
 
     // Convert markdown to HTML (basic conversion)
     private convertMarkdownToHTML(markdown: string): string {
