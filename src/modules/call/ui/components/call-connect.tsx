@@ -36,8 +36,7 @@ export const CallConnect = ({
 
     const [client, setClient] = useState<StreamVideoClient>();
     useEffect(() => {
-        // Check if this is a guest user
-        const guestUser = localStorage.getItem("guestUser");
+        const guestUser = localStorage.getItem(`guestUser_${meetingId}`);
         let userData;
         
         if (guestUser) {
@@ -45,7 +44,6 @@ export const CallConnect = ({
         } else if (userId && userName) {
             userData = { id: userId, name: userName, image: userImage };
         } else {
-            // Redirect to join page if no user data
             window.location.href = `/join/${meetingId}`;
             return;
         }

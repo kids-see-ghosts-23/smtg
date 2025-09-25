@@ -1,6 +1,7 @@
 import { MeetingGetOne } from "../../types";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import Markdown from "react-markdown";
 import {
     BookOpenTextIcon,
@@ -8,6 +9,7 @@ import {
     FileTextIcon,
     FileVideoIcon,
     SparklesIcon,
+    MailIcon,
 } from "lucide-react";
 import { GeneratedAvatar } from "@/components/generated-avatar";
 import Link from "next/link";
@@ -16,12 +18,63 @@ import { Badge } from "@/components/ui/badge";
 import { formatDuration } from "@/lib/utils";
 import { Transcript } from "./transcript";
 import { ChatProvider } from "./chat-provider";
+import { authClient } from "@/lib/auth-client";
+import { useState } from "react";
+import { toast } from "sonner";
 
 interface Props {
     data: MeetingGetOne;
 }
 
 export const CompletedState = ({ data }: Props) => {
+    const { data: authData, isPending } = authClient.useSession();
+    const [isEmailSending, setIsEmailSending] = useState(false);
+
+    const handleSendEmail = async () => {
+        if (!authData?.user?.email) {
+            toast.error("User email not found");
+            return;
+        }
+
+        setIsEmailSending(true);
+
+        try {
+            const response = await fetch('/api/send-summary-email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    to: authData.user.email,
+                    meetingName: data.name,
+                    summary: data.summary,
+                    agentName: data.agent.name,
+                    date: data.startedAt ? format(data.startedAt, "PPP") : "N/A",
+                    duration: data.duration ? formatDuration(data.duration) : "No duration",
+                }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Server response:', errorText);
+                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                toast.success("Meeting summary sent to your email successfully!");
+            } else {
+                throw new Error(result.error || 'Failed to send email');
+            }
+        } catch (error) {
+            console.error('Error sending email:', error);
+            toast.error(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        } finally {
+            setIsEmailSending(false);
+        }
+    };
+
     return (
         <div className="flex flex-col gap-y-4">
             <Tabs defaultValue="summary">
@@ -77,9 +130,19 @@ export const CompletedState = ({ data }: Props) => {
                     </div>
                 </TabsContent>
                 <TabsContent value="summary">
-                    <div className="bg-white rounded-lg border">
+                    <div className="bg-white rounded-lg border relative">
+                        <Button
+                            onClick={handleSendEmail}
+                            disabled={isEmailSending || isPending || !authData?.user?.email}
+                            className="absolute top-4 right-4 flex items-center gap-x-2 z-10"
+                            variant="outline"
+                            size="sm"
+                        >
+                            <MailIcon className="size-4" />
+                            {isEmailSending ? "Sending..." : "Email Summary"}
+                        </Button>
                         <div className="px-4 py-5 gap-y-5 flex flex-col col-span-5">
-                            <h2 className="text-2xl font-medium capitalize">
+                            <h2 className="text-2xl font-medium capitalize pr-32">
                                 {data.name}
                             </h2>
                             <div className="flex gap-x-2 items-center">

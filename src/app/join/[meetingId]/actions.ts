@@ -7,22 +7,22 @@ import { nanoid } from "nanoid";
 export async function createGuestUserAndToken(name: string) {
   try {
     const userId = `guest-${nanoid()}`;
+    const avatarUrl = generateAvatarUri({
+      seed: name.trim(),
+      variant: "initials",
+    });
     await streamVideo.upsertUsers([
       {
         id: userId,
         name: name.trim(),
         role: "user",
-        image: generateAvatarUri({
-          seed: name.trim(),
-          variant: "initials",
-        }),
+        image: avatarUrl,
       },
     ]);
     const token = streamVideo.generateUserToken({
       user_id: userId,
       validity_in_seconds: 3600, // 1 hour
     });
-
     return {
       success: true,
       userId,
