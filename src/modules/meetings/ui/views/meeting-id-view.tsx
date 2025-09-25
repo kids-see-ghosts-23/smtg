@@ -20,6 +20,7 @@ import { ActiveState } from "../components/active-state";
 import { CancelledState } from "../components/cancelled-state";
 import { ProcessingState } from "../components/processing-state";
 import { CompletedState } from "../components/completed-state";
+import { MeetingJoinLink } from "../components/meeting-join-link";
 
 interface Props {
     meetingId: string;
@@ -84,12 +85,20 @@ export const MeetingIdView = ({ meetingId }: Props) => {
                 {isCancelled && <CancelledState />}
                 {isCompleted && <CompletedState data={data} />}
                 {isUpcoming && (
-                    <UpcomingState
-                        meetingId={meetingId}
-                    />
+                    <div className="flex flex-col gap-4">
+                        <UpcomingState
+                            meetingId={meetingId}
+                        />
+                        <MeetingJoinLink meetingId={meetingId} />
+                    </div>
                 )}
                 {isProcessing && <ProcessingState />}
-                {isActive && <div>Active</div>}
+                {isActive && (
+                    <div className="flex flex-col gap-4">
+                        <div>Active</div>
+                        <MeetingJoinLink meetingId={meetingId} />
+                    </div>
+                )}
             </div>
         </>
     );

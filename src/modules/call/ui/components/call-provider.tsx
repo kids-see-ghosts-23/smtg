@@ -12,6 +12,23 @@ interface Props {
 
 export const CallProvider = ({ meetingId, meetingName }: Props) => {
     const { data, isPending } = authClient.useSession();
+    
+    // Check if this is a guest user
+    const guestUser = typeof window !== 'undefined' ? localStorage.getItem("guestUser") : null;
+    
+    if (guestUser) {
+        const userData = JSON.parse(guestUser);
+        return (
+            <CallConnect
+                meetingId={meetingId}
+                meetingName={meetingName}
+                userId={userData.id}
+                userName={userData.name}
+                userImage={userData.image}
+            />
+        );
+    }
+    
     if (!data || isPending) {
         return (
             <div className="flex h-screen items-center justify-center bg-radial from-sidebar-accent to-sidebar">
@@ -19,6 +36,7 @@ export const CallProvider = ({ meetingId, meetingName }: Props) => {
             </div>
         );
     }
+    
     return (
         <CallConnect
             meetingId={meetingId}

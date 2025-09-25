@@ -17,9 +17,9 @@ import { CallUI } from "./call-ui";
 interface Props {
     meetingId: string;
     meetingName: string;
-    userId: string;
-    userName: string;
-    userImage: string;
+    userId?: string;
+    userName?: string;
+    userImage?: string;
 }
 
 export const CallConnect = ({
@@ -36,23 +36,51 @@ export const CallConnect = ({
 
     const [client, setClient] = useState<StreamVideoClient>();
     useEffect(() => {
-        const _client = new StreamVideoClient({
-            apiKey: process.env.NEXT_PUBLIC_STREAM_VIDEO_API_KEY!,
-            user: {
-                id: userId,
-                name: userName,
-                image: userImage,
-            },
-            tokenProvider: generateToken,
-        });
+        // Check if this is a guest user
+        const guestUser = localStorage.getItem("guestUser");
+        let userData;
+        
+        if (guestUser) {
+            userData = JSON.parse(guestUser);
+        } else if (userId && userName) {
+            userData = { id: userId, name: userName, image: userImage };
+        } else {
+            // Redirect to join page if no user data
+            window.location.href = `/join/${meetingId}`;
+            return;
+        }
 
-        setClient(_client);
+        const initializeClient = async () => {
+            let token;
+            
+            if (guestUser) {
+                // Use the token from localStorage for guests
+                token = userData.token;
+            } else {
+                // Generate token for authenticated users
+                token = await generateToken();
+            }
 
-        return () => {
-            _client.disconnectUser();
-            setClient(undefined);
+            const _client = new StreamVideoClient({
+                apiKey: process.env.NEXT_PUBLIC_STREAM_VIDEO_API_KEY!,
+                user: {
+                    id: userData.id,
+                    name: userData.name,
+                    image: userData.image,
+                },
+                token,
+            });
+
+            setClient(_client);
+
+            return () => {
+                _client.disconnectUser();
+                setClient(undefined);
+            };
         };
-    }, [userId, userName, userImage, generateToken]);
+
+        initializeClient();
+    }, [userId, userName, userImage, generateToken, meetingId]);
 
     const [call, setCall] = useState<Call>();
 
