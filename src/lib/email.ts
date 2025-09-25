@@ -10,7 +10,7 @@ interface EmailOptions {
 export class EmailService {
     private transporter: nodemailer.Transporter;
     constructor() {
-        this.transporter = nodemailer.createTransporter({
+        this.transporter = nodemailer.createTransport({
             service: "gmail", // or your preferred email service
             auth: {
                 user: process.env.EMAIL_USER, // Your email
