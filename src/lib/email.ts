@@ -57,261 +57,194 @@ export class EmailService {
           <title>Meeting Summary</title>
           <style>
             body { 
-              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif; 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif; 
               line-height: 1.6; 
-              color: #1a1a1a; 
+              color: #374151; 
               max-width: 800px; 
               margin: 0 auto; 
-              padding: 20px; 
-              background-color: #f0fdf4;
+              padding: 30px; 
+              background-color: #f9fafb;
             }
             .container {
               background: white;
-              border-radius: 16px;
+              border-radius: 12px;
               overflow: hidden;
-              box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.04);
-              border: 1px solid #bbf7d0;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+              border: 1px solid #e5e7eb;
             }
             .header { 
-              background: linear-gradient(135deg, #16a34a 0%, #22c55e 50%, #4ade80 100%);
+              background: #16a34a;
               color: white;
-              padding: 40px 40px 30px 40px; 
-              position: relative;
-              overflow: hidden;
-            }
-            .header::before {
-              content: '';
-              position: absolute;
-              top: 0;
-              left: 0;
-              right: 0;
-              bottom: 0;
-              background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+              padding: 35px 40px; 
             }
             .header-content {
-              position: relative;
-              z-index: 2;
+              max-width: 600px;
+              margin: 0 auto;
             }
             .meeting-title { 
               margin: 0 0 20px 0; 
-              font-size: 32px;
-              font-weight: 700;
-              letter-spacing: -0.025em;
-              text-align: center;
-            }
-            .company-badge {
-              display: inline-block;
-              background: rgba(255, 255, 255, 0.15);
-              backdrop-filter: blur(10px);
-              border: 1px solid rgba(255, 255, 255, 0.2);
-              border-radius: 50px;
-              padding: 8px 20px;
-              font-size: 13px;
+              font-size: 28px;
               font-weight: 600;
-              letter-spacing: 0.5px;
-              text-transform: uppercase;
-              margin-bottom: 20px;
-              text-align: center;
-              display: block;
-              width: fit-content;
-              margin: 0 auto 20px auto;
+              letter-spacing: -0.02em;
             }
             .meta-info { 
-              background: rgba(255, 255, 255, 0.12);
-              backdrop-filter: blur(20px);
-              border: 1px solid rgba(255, 255, 255, 0.18);
-              border-radius: 12px;
-              padding: 20px;
-              margin-top: 25px;
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+              grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
               gap: 20px;
+              margin-top: 25px;
             }
             .meta-item {
               display: flex;
-              align-items: center;
-              justify-content: center;
-              gap: 12px;
-              font-size: 14px;
-              font-weight: 500;
-              opacity: 0.95;
-              padding: 8px 12px;
-              border-radius: 8px;
-              background: rgba(255, 255, 255, 0.08);
-              border: 1px solid rgba(255, 255, 255, 0.12);
-              transition: all 0.2s ease;
-            }
-            .meta-item:hover {
-              background: rgba(255, 255, 255, 0.15);
-              transform: translateY(-1px);
-            }
-            .meta-icon {
-              font-size: 16px;
-              opacity: 0.9;
+              flex-direction: column;
+              gap: 5px;
             }
             .meta-label {
-              color: rgba(255, 255, 255, 0.8);
-              font-size: 12px;
-              font-weight: 600;
+              color: rgba(255, 255, 255, 0.85);
+              font-size: 13px;
+              font-weight: 500;
               text-transform: uppercase;
               letter-spacing: 0.5px;
-              margin-right: 4px;
             }
             .meta-value {
               color: white;
               font-weight: 600;
+              font-size: 16px;
+            }
+            .content-section {
+              padding: 45px 40px;
+            }
+            .section-title {
+              color: #16a34a;
+              margin: 0 0 30px 0;
+              font-size: 22px;
+              font-weight: 600;
+              padding-bottom: 15px;
+              border-bottom: 2px solid #e5e7eb;
             }
             .summary-content { 
-              padding: 45px; 
-            }
-            .summary-title {
-              color: #15803d;
-              margin-bottom: 30px;
-              font-size: 22px;
-              font-weight: 700;
-              display: flex;
-              align-items: center;
-              gap: 12px;
-              padding-bottom: 15px;
-              border-bottom: 3px solid #bbf7d0;
+              background: #f9fafb;
+              border-radius: 8px;
+              padding: 30px;
+              border: 1px solid #e5e7eb;
             }
             .summary-content h1 { 
-              color: #166534; 
-              font-size: 26px; 
-              margin: 28px 0 18px 0; 
-              font-weight: 700;
-              border-bottom: 2px solid #bbf7d0;
+              color: #1f2937; 
+              font-size: 24px; 
+              margin: 25px 0 18px 0; 
+              font-weight: 600;
+              border-bottom: 1px solid #e5e7eb;
               padding-bottom: 10px;
-              letter-spacing: -0.025em;
             }
             .summary-content h2 { 
-              color: #15803d; 
-              font-size: 22px; 
-              margin: 24px 0 14px 0; 
+              color: #1f2937; 
+              font-size: 20px; 
+              margin: 22px 0 15px 0; 
               font-weight: 600;
             }
             .summary-content h3 { 
-              color: #16a34a; 
+              color: #374151; 
               font-size: 18px; 
               margin: 20px 0 12px 0; 
               font-weight: 600;
             }
             .summary-content h4 { 
-              color: #22c55e; 
+              color: #374151; 
               font-size: 16px; 
               margin: 18px 0 10px 0; 
               font-weight: 600;
             }
-            .summary-content h5 { 
-              color: #4ade80; 
+            .summary-content h5, 
+            .summary-content h6 { 
+              color: #4b5563; 
               font-size: 15px; 
               margin: 16px 0 8px 0; 
-              font-weight: 600;
-            }
-            .summary-content h6 { 
-              color: #86efac; 
-              font-size: 14px; 
-              margin: 14px 0 6px 0; 
               font-weight: 600;
             }
             .summary-content p { 
               margin: 0 0 18px 0; 
               line-height: 1.7;
-              color: #334155;
+              color: #374151;
               font-size: 16px;
             }
             .summary-content ul, .summary-content ol { 
               margin: 18px 0;
-              padding-left: 28px;
+              padding-left: 25px;
             }
             .summary-content ul {
-              list-style-type: none;
-            }
-            .summary-content ul li::before {
-              content: "•";
-              color: #22c55e;
-              font-weight: bold;
-              position: absolute;
-              margin-left: -20px;
+              list-style-type: disc;
             }
             .summary-content ol {
               list-style-type: decimal;
-              list-style-position: outside;
             }
             .summary-content li { 
-              margin-bottom: 10px; 
+              margin-bottom: 8px; 
               line-height: 1.7;
-              color: #334155;
+              color: #374151;
               font-size: 16px;
-              position: relative;
             }
             .summary-content strong { 
-              font-weight: 700; 
-              color: #166534;
+              font-weight: 600; 
+              color: #1f2937;
             }
             .summary-content em { 
               font-style: italic; 
-              color: #15803d;
+              color: #4b5563;
             }
             .summary-content del {
               text-decoration: line-through;
-              color: #64748b;
+              color: #6b7280;
             }
             .summary-content code { 
-              background: #dcfce7; 
-              padding: 3px 8px; 
-              border-radius: 6px; 
-              font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+              background: #f3f4f6; 
+              padding: 2px 6px; 
+              border-radius: 4px; 
+              font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace;
               font-size: 14px;
-              color: #166534;
-              border: 1px solid #bbf7d0;
-              font-weight: 500;
+              color: #16a34a;
+              border: 1px solid #e5e7eb;
             }
             .summary-content pre {
-              background: #166534;
-              color: #f0fdf4;
+              background: #1f2937;
+              color: #f9fafb;
               padding: 20px;
-              border-radius: 12px;
+              border-radius: 6px;
               overflow-x: auto;
               margin: 20px 0;
-              border: 1px solid #15803d;
+              border: 1px solid #374151;
             }
             .summary-content pre code {
               background: transparent;
-              color: #f0fdf4;
+              color: #f9fafb;
               padding: 0;
               border: none;
               font-size: 14px;
             }
             .summary-content blockquote { 
-              border-left: 4px solid #22c55e; 
-              padding: 18px 24px; 
-              margin: 24px 0; 
+              border-left: 4px solid #16a34a; 
+              padding: 15px 20px; 
+              margin: 20px 0; 
               background: #f0fdf4;
-              border-radius: 0 12px 12px 0;
-              font-style: italic;
-              color: #15803d;
-              position: relative;
+              border-radius: 0 4px 4px 0;
+              color: #374151;
             }
             .summary-content a {
-              color: #22c55e;
+              color: #16a34a;
               text-decoration: underline;
-              font-weight: 500;
             }
             .summary-content a:hover {
-              color: #166534;
+              color: #15803d;
             }
             .summary-content hr {
               border: none;
-              border-top: 2px solid #bbf7d0;
-              margin: 32px 0;
+              border-top: 1px solid #e5e7eb;
+              margin: 30px 0;
             }
             .footer { 
-              background: #f0fdf4;
-              padding: 30px 45px; 
-              border-top: 1px solid #bbf7d0; 
+              background: #f9fafb;
+              padding: 30px 40px; 
+              border-top: 1px solid #e5e7eb; 
               font-size: 13px; 
-              color: #15803d;
+              color: #6b7280;
               text-align: center;
             }
             .footer p {
@@ -319,31 +252,26 @@ export class EmailService {
             }
             .footer p:last-child {
               margin: 0;
-              font-weight: 600;
-              color: #166534;
-            }
-            .sparkle { 
-              color: #f59e0b; 
-              filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.3));
+              font-weight: 500;
+              color: #4b5563;
             }
             @media (max-width: 768px) {
-              .header { padding: 30px 25px 25px 25px; }
-              .summary-content { padding: 30px 25px; }
+              body { padding: 15px; }
+              .header { padding: 25px; }
+              .content-section { padding: 30px 25px; }
+              .summary-content { padding: 20px; }
               .footer { padding: 25px; }
-              .meeting-title { font-size: 28px; }
+              .meeting-title { font-size: 24px; }
               .meta-info { 
                 grid-template-columns: 1fr; 
-                gap: 12px; 
-                padding: 16px;
-              }
-              .meta-item {
-                justify-content: flex-start;
+                gap: 15px; 
               }
             }
             @media (max-width: 480px) {
-              .meeting-title { font-size: 24px; }
-              .summary-content { padding: 20px; }
-              .header { padding: 25px 20px 20px 20px; }
+              .meeting-title { font-size: 22px; }
+              .content-section { padding: 25px 20px; }
+              .summary-content { padding: 15px; }
+              .header { padding: 20px; }
             }
           </style>
         </head>
@@ -354,35 +282,26 @@ export class EmailService {
                 <h1 class="meeting-title">${meetingName}</h1>
                 <div class="meta-info">
                   <div class="meta-item">
-                    <span class="meta-icon">👤</span>
-                    <div>
-                      <span class="meta-label">Facilitator</span>
-                      <span class="meta-value">${agentName}</span>
-                    </div>
+                    <div class="meta-label">Facilitator</div>
+                    <div class="meta-value">${agentName}</div>
                   </div>
                   <div class="meta-item">
-                    <span class="meta-icon">📅</span>
-                    <div>
-                      <span class="meta-label">Date</span>
-                      <span class="meta-value">${date}</span>
-                    </div>
+                    <div class="meta-label">Date</div>
+                    <div class="meta-value">${date}</div>
                   </div>
                   <div class="meta-item">
-                    <span class="meta-icon">⏱️</span>
-                    <div>
-                      <span class="meta-label">Duration</span>
-                      <span class="meta-value">${duration}</span>
-                    </div>
+                    <div class="meta-label">Duration</div>
+                    <div class="meta-value">${duration}</div>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div class="summary-content">
-              <div class="summary-title">
-                <span>General Summary</span>
+            <div class="content-section">
+              <h2 class="section-title">Meeting Summary</h2>
+              <div class="summary-content">
+                ${this.convertMarkdownToHTML(summary)}
               </div>
-              ${this.convertMarkdownToHTML(summary)}
             </div>
             
             <div class="footer">
@@ -393,7 +312,7 @@ export class EmailService {
         </body>
       </html>
     `;
-}
+    }
 
     // Convert markdown to HTML (basic conversion)
     private convertMarkdownToHTML(markdown: string): string {
