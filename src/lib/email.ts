@@ -56,6 +56,9 @@ export class EmailService {
           <meta charset="utf-8">
           <title>Meeting Summary</title>
           <style>
+            * {
+              box-sizing: border-box;
+            }
             body { 
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif; 
               line-height: 1.6; 
@@ -76,39 +79,55 @@ export class EmailService {
               background: #16a34a;
               color: white;
               padding: 35px 40px; 
+              position: relative;
+              clear: both;
             }
             .header-content {
-              max-width: 600px;
-              margin: 0 auto;
+              width: 100%;
+              max-width: none;
+              margin: 0;
+              position: relative;
+              z-index: 1;
             }
             .meeting-title { 
-              margin: 0 0 20px 0; 
+              margin: 0 0 25px 0; 
               font-size: 28px;
               font-weight: 600;
               letter-spacing: -0.02em;
+              line-height: 1.3;
+              color: white;
+              display: block;
+              width: 100%;
             }
             .meta-info { 
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-              gap: 20px;
-              margin-top: 25px;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 25px;
+              margin: 0;
+              width: 100%;
             }
             .meta-item {
               display: flex;
               flex-direction: column;
-              gap: 5px;
+              gap: 6px;
+              min-width: 120px;
+              flex: 1;
             }
             .meta-label {
               color: rgba(255, 255, 255, 0.85);
-              font-size: 13px;
+              font-size: 12px;
               font-weight: 500;
               text-transform: uppercase;
               letter-spacing: 0.5px;
+              margin: 0;
+              line-height: 1.2;
             }
             .meta-value {
               color: white;
               font-weight: 600;
-              font-size: 16px;
+              font-size: 15px;
+              margin: 0;
+              line-height: 1.3;
             }
             .content-section {
               padding: 45px 40px;
@@ -263,8 +282,11 @@ export class EmailService {
               .footer { padding: 25px; }
               .meeting-title { font-size: 24px; }
               .meta-info { 
-                grid-template-columns: 1fr; 
+                flex-direction: column;
                 gap: 15px; 
+              }
+              .meta-item {
+                min-width: auto;
               }
             }
             @media (max-width: 480px) {
@@ -272,6 +294,9 @@ export class EmailService {
               .content-section { padding: 25px 20px; }
               .summary-content { padding: 15px; }
               .header { padding: 20px; }
+              .meta-info {
+                gap: 12px;
+              }
             }
           </style>
         </head>
