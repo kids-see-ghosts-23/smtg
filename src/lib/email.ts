@@ -102,7 +102,7 @@ export class EmailService {
             .meta-info { 
               display: flex;
               flex-wrap: wrap;
-              gap: 30px;
+              gap: 45px;
               margin: 0;
               width: 100%;
               align-items: flex-start;
@@ -111,6 +111,7 @@ export class EmailService {
               display: block;
               min-width: 140px;
               flex: 0 1 auto;
+              padding: 0 10px 0 0;
             }
             .meta-label {
               color: rgba(255, 255, 255, 0.85);
@@ -118,7 +119,7 @@ export class EmailService {
               font-weight: 600;
               text-transform: uppercase;
               letter-spacing: 0.8px;
-              margin: 0 0 8px 0;
+              margin: 0 0 10px 0;
               line-height: 1.2;
               display: block;
             }
@@ -309,7 +310,7 @@ export class EmailService {
                 <h1 class="meeting-title">${meetingName}</h1>
                 <div class="meta-info">
                   <div class="meta-item">
-                    <div class="meta-label">Facilitator</div>
+                    <div class="meta-label">Agent</div>
                     <div class="meta-value">${agentName}</div>
                   </div>
                   <div class="meta-item">
