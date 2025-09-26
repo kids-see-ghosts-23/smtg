@@ -11,6 +11,19 @@ const nextConfig: NextConfig = {
             },
         ];
     },
+    webpack: (config, { isServer }) => {
+        if (!isServer) {
+            // Handle mermaid's dynamic imports
+            config.resolve.fallback = {
+                ...config.resolve.fallback,
+                fs: false,
+                path: false,
+                crypto: false,
+            };
+        }
+        return config;
+    },
+    transpilePackages: ["mermaid"],
 };
 
 export default nextConfig;
