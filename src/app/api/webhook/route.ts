@@ -101,15 +101,125 @@ export async function POST(req: NextRequest) {
         }
 
         const call = streamVideo.video.call("default", meetingId);
-        const realtimeClient = await streamVideo.video.connectOpenAi({
-            call,
-            openAiApiKey: process.env.OPENAI_API_KEY!,
-            agentUserId: existingAgent.id,
-        });
 
-        realtimeClient.updateSession({
-            instructions: existingAgent.instructions,
-        });
+        console.log("Attempting to connect OpenAI for meeting:", meetingId);
+        console.log("Agent ID:", existingAgent.id);
+        console.log("OpenAI API Key exists:", !!process.env.OPENAI_API_KEY);
+
+        // Test OpenAI connection first
+        try {
+            const testResponse = await openaiClient.chat.completions.create({
+                messages: [{ role: "user", content: "Hello" }],
+                model: "gpt-4o",
+                max_tokens: 10,
+            });
+            console.log(
+                "OpenAI API test successful:",
+                !!testResponse.choices[0]?.message?.content
+            );
+        } catch (apiError) {
+            console.error("OpenAI API test failed:", apiError);
+            return NextResponse.json(
+                { error: "OpenAI API connection failed" },
+                { status: 500 }
+            );
+        }
+
+        try {
+            const realtimeClient = await streamVideo.video.connectOpenAi({
+                call,
+                openAiApiKey: process.env.OPENAI_API_KEY!,
+                agentUserId: existingAgent.id,
+            });
+
+            console.log("OpenAI connection successful, updating session...");
+            console.log(
+                "Agent instructions length:",
+                existingAgent.instructions?.length || 0
+            );
+
+            const instructions =
+                existingAgent.instructions ||
+                "You are a helpful AI assistant in a meeting. Listen to the conversation and respond when appropriate.";
+
+            // Add connection state logging
+            console.log("Realtime client state:", {
+                isConnected: !!realtimeClient,
+                hasUpdateSession:
+                    typeof realtimeClient.updateSession === "function",
+            });
+
+            await realtimeClient.updateSession({
+                instructions: instructions,
+                voice: "alloy",
+                input_audio_format: "pcm16",
+                output_audio_format: "pcm16",
+                input_audio_transcription: {
+                    model: "whisper-1",
+                },
+                turn_detection: {
+                    type: "server_vad",
+                    threshold: 0.5,
+                    prefix_padding_ms: 300,
+                    silence_duration_ms: 500,
+                },
+            });
+
+            console.log("Session updated with instructions and configuration");
+
+            // Add event listeners for debugging
+            realtimeClient.on("session.created", () => {
+                console.log("Realtime session created successfully");
+            });
+
+            realtimeClient.on("session.updated", () => {
+                console.log("Realtime session updated successfully");
+            });
+
+            realtimeClient.on(
+                "conversation.item.input_audio_transcription.completed",
+                (event: any) => {
+                    console.log(
+                        "Audio transcription completed:",
+                        event.transcript
+                    );
+                }
+            );
+
+            realtimeClient.on("response.audio.done", () => {
+                console.log("Audio response completed");
+            });
+
+            realtimeClient.on("error", (error: any) => {
+                console.error("Realtime client error:", error);
+            });
+
+            // Try to send a test message to verify connection
+            setTimeout(() => {
+                console.log("Attempting to test realtime connection...");
+                try {
+                    realtimeClient.conversation.item.create({
+                        type: "message",
+                        role: "user",
+                        content: [
+                            {
+                                type: "input_text",
+                                text: "Hello, I'm testing the connection",
+                            },
+                        ],
+                    });
+                    console.log("Test message sent successfully");
+                } catch (testError) {
+                    console.error("Test message failed:", testError);
+                }
+            }, 2000);
+        } catch (error) {
+            console.error("Error connecting to OpenAI:", error);
+            return NextResponse.json(
+                { error: "Failed to connect OpenAI agent" },
+                { status: 500 }
+            );
+        }
     } else if (eventType === "call.session_participant_left") {
         const event = payload as CallSessionParticipantLeftEvent;
         const meetingId = event.call_cid.split(":")[1]; // call_cid is formatted as "type:id"
@@ -242,15 +352,17 @@ export async function POST(req: NextRequest) {
 
             const channel = streamChat.channel("messaging", channelId);
             await channel.watch();
-            
+
             const previousMessages = channel.state.messages
                 .slice(-5)
                 .filter((msg) => msg.text && msg.text.trim() !== "")
                 .map<ChatCompletionMessageParam>((message) => ({
-                    role: message.user?.id === existingAgent.id ? "assistant" : "user",
+                    role:
+                        message.user?.id === existingAgent.id
+                            ? "assistant"
+                            : "user",
                     content: message.text || "",
-                }))
-
+                }));
 
             const GPTResponse = await openaiClient.chat.completions.create({
                 messages: [
@@ -258,7 +370,7 @@ export async function POST(req: NextRequest) {
                     ...previousMessages,
                     { role: "user", content: text },
                 ],
-                model: "gpt-4o"
+                model: "gpt-4o",
             });
 
             const GPTResponseText = GPTResponse.choices[0].message.content;

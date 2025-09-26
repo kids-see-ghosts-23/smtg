@@ -2,6 +2,7 @@ import { MeetingGetOne } from "../../types";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { MindMap } from "./mindmap";
 import Markdown from "react-markdown";
 import {
     BookOpenTextIcon,
@@ -11,6 +12,7 @@ import {
     SparklesIcon,
     MailIcon,
     NotebookPenIcon,
+	BrainIcon
 } from "lucide-react";
 import { GeneratedAvatar } from "@/components/generated-avatar";
 import Link from "next/link";
@@ -32,6 +34,12 @@ export const CompletedState = ({ data }: Props) => {
     const [isEmailSending, setIsEmailSending] = useState(false);
     const [isNotionSending, setIsNotionSending] = useState(false);
 
+    // Safely handle potentially null values with fallbacks
+    const meetingSummary = data.summary ?? "No summary available";
+    const meetingRecordingUrl = data.recordingUrl ?? "";
+    const meetingStartedAt = data.startedAt ?? new Date();
+    const meetingDuration = data.duration ?? 0;
+
     const handleSendEmail = async () => {
         if (!authData?.user?.email) {
             toast.error("User email not found");
@@ -49,7 +57,7 @@ export const CompletedState = ({ data }: Props) => {
                 body: JSON.stringify({
                     to: authData.user.email,
                     meetingName: data.name,
-                    summary: data.summary,
+                    summary: meetingSummary,
                     agentName: data.agent.name,
                     date: data.startedAt
                         ? format(data.startedAt, "PPP")
@@ -112,7 +120,7 @@ export const CompletedState = ({ data }: Props) => {
                     notionToken,
                     notionPageId,
                     meetingName: data.name,
-                    summary: data.summary,
+                    summary: data.summary ?? "",
                     agentName: data.agent.name,
                     date: data.startedAt
                         ? format(data.startedAt, "PPP")
@@ -184,6 +192,13 @@ export const CompletedState = ({ data }: Props) => {
                                 <SparklesIcon />
                                 Ask AI
                             </TabsTrigger>
+                            <TabsTrigger
+                                value="mindmap"
+                                className="text-muted-foreground rounded-none bg-background data-[state=active]:shadow-none border-b-2 border-transparent data-[state=active]:border-b-primary data-[state=active]:text-accent-foreground h-full hover:text-accent-foreground"
+                            >
+                                <BrainIcon />
+                                Mind Map
+                            </TabsTrigger>
                         </TabsList>
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
@@ -195,10 +210,13 @@ export const CompletedState = ({ data }: Props) => {
                 <TabsContent value="transcript">
                     <Transcript meetingId={data.id} />
                 </TabsContent>
+                <TabsContent value="mindmap">
+                    <MindMap summary={data.summary ?? ""} />
+                </TabsContent>
                 <TabsContent value="recording">
                     <div className="bg-white rounded-lg border px-4 py-5">
                         <video
-                            src={data.recordingUrl!}
+                            src={data.recordingUrl ?? ""}
                             className="w-full rounded-lg"
                             controls
                         />
@@ -357,7 +375,7 @@ export const CompletedState = ({ data }: Props) => {
                                         ),
                                     }}
                                 >
-                                    {data.summary}
+                                    {data.summary ?? ""}
                                 </Markdown>
                             </div>
                         </div>
