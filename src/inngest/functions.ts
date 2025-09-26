@@ -19,6 +19,8 @@ Provide a detailed, engaging summary of the session's content. Focus on major fe
 ### Notes
 Break down key content into thematic sections with timestamp ranges. Each section should summarize key points, actions, or demos in bullet format.
 
+YOU MUST NOT USE H4, H5 and H6 tags.
+
 Example:
 #### Section Name
 - Main point or demo shown here
@@ -28,6 +30,8 @@ Example:
 #### Next Section
 - Feature X automatically does Y
 - Mention of integration with Z
+
+
     `.trim(),
     model: openai({
         model: "gpt-4o",

@@ -10,6 +10,7 @@ import {
     FileVideoIcon,
     SparklesIcon,
     MailIcon,
+    NotebookPenIcon,
 } from "lucide-react";
 import { GeneratedAvatar } from "@/components/generated-avatar";
 import Link from "next/link";
@@ -29,6 +30,7 @@ interface Props {
 export const CompletedState = ({ data }: Props) => {
     const { data: authData, isPending } = authClient.useSession();
     const [isEmailSending, setIsEmailSending] = useState(false);
+    const [isNotionSending, setIsNotionSending] = useState(false);
 
     const handleSendEmail = async () => {
         if (!authData?.user?.email) {
@@ -39,39 +41,112 @@ export const CompletedState = ({ data }: Props) => {
         setIsEmailSending(true);
 
         try {
-            const response = await fetch('/api/send-summary-email', {
-                method: 'POST',
+            const response = await fetch("/api/send-summary-email", {
+                method: "POST",
                 headers: {
-                    'Content-Type': 'application/json',
+                    "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                     to: authData.user.email,
                     meetingName: data.name,
                     summary: data.summary,
                     agentName: data.agent.name,
-                    date: data.startedAt ? format(data.startedAt, "PPP") : "N/A",
-                    duration: data.duration ? formatDuration(data.duration) : "No duration",
+                    date: data.startedAt
+                        ? format(data.startedAt, "PPP")
+                        : "N/A",
+                    duration: data.duration
+                        ? formatDuration(data.duration)
+                        : "No duration",
                 }),
             });
 
             if (!response.ok) {
                 const errorText = await response.text();
-                console.error('Server response:', errorText);
-                throw new Error(`Server error: ${response.status} ${response.statusText}`);
+                console.error("Server response:", errorText);
+                throw new Error(
+                    `Server error: ${response.status} ${response.statusText}`
+                );
             }
 
             const result = await response.json();
 
             if (result.success) {
-                toast.success("Meeting summary sent to your email successfully!");
+                toast.success(
+                    "Meeting summary sent to your email successfully!"
+                );
             } else {
-                throw new Error(result.error || 'Failed to send email');
+                throw new Error(result.error || "Failed to send email");
             }
         } catch (error) {
-            console.error('Error sending email:', error);
-            toast.error(`Failed to send email: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            console.error("Error sending email:", error);
+            toast.error(
+                `Failed to send email: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`
+            );
         } finally {
             setIsEmailSending(false);
+        }
+    };
+
+    const handleSendToNotion = async () => {
+        const notionToken = localStorage.getItem("notionToken");
+        const notionPageId = localStorage.getItem("notionPageId");
+
+        if (!notionToken || !notionPageId) {
+            toast.error(
+                "Notion not connected. Please connect your Notion account first."
+            );
+            return;
+        }
+
+        setIsNotionSending(true);
+
+        try {
+            const response = await fetch("/api/send-summary-notion", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    notionToken,
+                    notionPageId,
+                    meetingName: data.name,
+                    summary: data.summary,
+                    agentName: data.agent.name,
+                    date: data.startedAt
+                        ? format(data.startedAt, "PPP")
+                        : "N/A",
+                    duration: data.duration
+                        ? formatDuration(data.duration)
+                        : "No duration",
+                }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error("Server response:", errorText);
+                throw new Error(
+                    `Server error: ${response.status} ${response.statusText}`
+                );
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                toast.success("Meeting summary sent to Notion successfully!");
+            } else {
+                throw new Error(result.error || "Failed to send to Notion");
+            }
+        } catch (error) {
+            console.error("Error sending to Notion:", error);
+            toast.error(
+                `Failed to send to Notion: ${
+                    error instanceof Error ? error.message : "Unknown error"
+                }`
+            );
+        } finally {
+            setIsNotionSending(false);
         }
     };
 
@@ -113,7 +188,7 @@ export const CompletedState = ({ data }: Props) => {
                         <ScrollBar orientation="horizontal" />
                     </ScrollArea>
                 </div>
-                
+
                 <TabsContent value="chat">
                     <ChatProvider meetingId={data.id} meetingName={data.name} />
                 </TabsContent>
@@ -131,16 +206,36 @@ export const CompletedState = ({ data }: Props) => {
                 </TabsContent>
                 <TabsContent value="summary">
                     <div className="bg-white rounded-lg border relative">
-                        <Button
-                            onClick={handleSendEmail}
-                            disabled={isEmailSending || isPending || !authData?.user?.email}
-                            className="absolute top-4 right-4 flex items-center gap-x-2 z-10"
-                            variant="outline"
-                            size="sm"
-                        >
-                            <MailIcon className="size-4" />
-                            {isEmailSending ? "Sending..." : "Email Summary"}
-                        </Button>
+                        <div className="absolute top-4 right-4 flex items-center gap-x-2 z-10">
+                            <Button
+                                onClick={handleSendToNotion}
+                                disabled={isNotionSending}
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-x-2"
+                            >
+                                <NotebookPenIcon className="size-4" />
+                                {isNotionSending
+                                    ? "Sending..."
+                                    : "Send to Notion"}
+                            </Button>
+                            <Button
+                                onClick={handleSendEmail}
+                                disabled={
+                                    isEmailSending ||
+                                    isPending ||
+                                    !authData?.user?.email
+                                }
+                                className="flex items-center gap-x-2"
+                                variant="outline"
+                                size="sm"
+                            >
+                                <MailIcon className="size-4" />
+                                {isEmailSending
+                                    ? "Sending..."
+                                    : "Email Summary"}
+                            </Button>
+                        </div>
                         <div className="px-4 py-5 gap-y-5 flex flex-col col-span-5">
                             <h2 className="text-2xl font-medium capitalize pr-32">
                                 {data.name}
