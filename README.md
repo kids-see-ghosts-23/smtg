@@ -1,7 +1,7 @@
-# SMTG - AI Meeting Assistant
+# SMTG Notion - AI Meeting Assistant
 
 <p align="center">
-  <img src="https://placehold.co/400x200/4f46e5/ffffff?text=SMTG" alt="SMTG Logo" />
+  <img src="./public/Logo.png" alt="SMTG Notion Logo" />
 </p>
 
 <p align="center">
@@ -9,11 +9,38 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Next.js-15+-black?style=flat-square&logo=next.js" alt="Next.js" />
-  <img src="https://img.shields.io/badge/TypeScript-5+-blue?style=flat-square&logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/PostgreSQL-14+-blue?style=flat-square&logo=postgresql" alt="PostgreSQL" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License" />
+  <img src="https://img.shields.io/badge/Next.js-15+-white?style=for-the-badge&logo=next.js&logoColor=black" alt="Next.js" />
+  <img src="https://img.shields.io/badge/TypeScript-5+-white?style=for-the-badge&logo=typescript&logoColor=3178C6" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/PostgreSQL-14+-white?style=for-the-badge&logo=postgresql&logoColor=4169E1" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/License-MIT-white?style=for-the-badge&logo=opensourceinitiative&logoColor=black" alt="MIT License" />
 </p>
+
+<style>
+body {
+  background-color: #ffffff;
+  color: #333333;
+}
+
+code {
+  background-color: #f8f9fa;
+  color: #333333;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+}
+
+pre {
+  background-color: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.mermaid {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+}
+</style>
 
 ## 📚 Table of Contents
 
@@ -29,7 +56,7 @@
 - [Getting Started](#-getting-started)
 - [Workflow](#-workflow)
 
-SMTG is an AI-powered meeting assistant that facilitates intelligent conversations between users and AI agents. The platform enables users to schedule meetings, participate in real-time video calls with AI agents, and receive automated summaries and follow-ups.
+SMTG Notion is an AI-powered meeting assistant that facilitates intelligent conversations between users and AI agents. The platform enables users to schedule meetings, participate in real-time video calls with AI agents, and receive automated summaries and follow-ups.
 
 ## 🌟 Features
 
@@ -69,7 +96,7 @@ SMTG is an AI-powered meeting assistant that facilitates intelligent conversatio
 
 ## 🎯 Project Overview
 
-SMTG revolutionizes the way we conduct meetings by introducing AI agents that can be specialized for any domain or topic. Whether you need a legal expert, a medical consultant, a software engineer, or a marketing specialist, you can create and train an AI agent to meet your specific needs.
+SMTG Notion revolutionizes the way we conduct meetings by introducing AI agents that can be specialized for any domain or topic. Whether you need a legal expert, a medical consultant, a software engineer, or a marketing specialist, you can create and train an AI agent to meet your specific needs.
 
 ### Key Benefits
 
@@ -89,6 +116,7 @@ SMTG revolutionizes the way we conduct meetings by introducing AI agents that ca
 
 ## Project Structure
 
+<div class="mermaid">
 ```mermaid
 graph TD
     A[Frontend<br/>Next.js • UI Components • React Hooks] 
@@ -115,9 +143,19 @@ graph TD
     G -.-> I
     A -.-> K
 ```
+</div>
+
+<style>
+.mermaid {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+}
+</style>
 
 ## Backend Information Flow
 
+<div class="mermaid">
 ```mermaid
 graph LR
     A[Client Application] --> B[Next.js API Routes]
@@ -186,6 +224,15 @@ graph LR
         T
     end
 ```
+</div>
+
+<style>
+.mermaid {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 10px;
+}
+</style>
 
 ## Database Schema
 
