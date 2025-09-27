@@ -1,7 +1,7 @@
 # SMTG - AI Meeting Assistant
 
 <p align="center">
-  <img src="https://placehold.co/400x200/4f46e5/ffffff?text=SMTG+Notion" alt="SMTG Logo" />
+  <img src="https://placehold.co/400x200/4f46e5/ffffff?text=SMTG" alt="SMTG Logo" />
 </p>
 
 <p align="center">
