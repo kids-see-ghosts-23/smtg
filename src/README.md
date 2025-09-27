@@ -4,15 +4,15 @@ This document provides an overview of all the documentation available for the SM
 
 ## Table of Contents
 
-1. [API Documentation](./api.md) - Complete documentation for all API endpoints
-2. [Database Schema](./database.md) - Complete database structure and relationships
-3. [TRPC Implementation](./trpc.md) - Type-safe API communication setup
-4. [Agents Module](./agents.md) - Documentation for the agents management system
-5. [Meetings Module](./meetings.md) - Documentation for the meetings management system
-6. [Authentication Module](./auth.md) - Documentation for the authentication system
-7. [Call Module](./call.md) - Documentation for the real-time video call system
-8. [Dashboard Module](./dashboard.md) - Documentation for the main dashboard interface
-9. [Home Module](./home.md) - Documentation for the home/landing page
+1. [API Documentation](../docs/api.md) - Complete documentation for all API endpoints
+2. [Database Schema](../docs/database.md) - Complete database structure and relationships
+3. [TRPC Implementation](../docs/trpc.md) - Type-safe API communication setup
+4. [Agents Module](../docs/agents.md) - Documentation for the agents management system
+5. [Meetings Module](../docs/meetings.md) - Documentation for the meetings management system
+6. [Authentication Module](../docs/auth.md) - Documentation for the authentication system
+7. [Call Module](../docs/call.md) - Documentation for the real-time video call system
+8. [Dashboard Module](../docs/dashboard.md) - Documentation for the main dashboard interface
+9. [Home Module](../docs/home.md) - Documentation for the home/landing page
 
 ## Overview
 
