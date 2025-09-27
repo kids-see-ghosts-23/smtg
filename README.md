@@ -1,7 +1,7 @@
-# SMTG Notion - AI Meeting Assistant
+# SMTG - AI Meeting Assistant
 
 <p align="center">
-  <img src="https://placehold.co/400x200/4f46e5/ffffff?text=SMTG+Notion" alt="SMTG Notion Logo" />
+  <img src="https://placehold.co/400x200/4f46e5/ffffff?text=SMTG+Notion" alt="SMTG Logo" />
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 - [Getting Started](#-getting-started)
 - [Workflow](#-workflow)
 
-SMTG Notion is an AI-powered meeting assistant that facilitates intelligent conversations between users and AI agents. The platform enables users to schedule meetings, participate in real-time video calls with AI agents, and receive automated summaries and follow-ups.
+SMTG is an AI-powered meeting assistant that facilitates intelligent conversations between users and AI agents. The platform enables users to schedule meetings, participate in real-time video calls with AI agents, and receive automated summaries and follow-ups.
 
 ## 🌟 Features
 
@@ -69,7 +69,7 @@ SMTG Notion is an AI-powered meeting assistant that facilitates intelligent conv
 
 ## 🎯 Project Overview
 
-SMTG Notion revolutionizes the way we conduct meetings by introducing AI agents that can be specialized for any domain or topic. Whether you need a legal expert, a medical consultant, a software engineer, or a marketing specialist, you can create and train an AI agent to meet your specific needs.
+SMTG revolutionizes the way we conduct meetings by introducing AI agents that can be specialized for any domain or topic. Whether you need a legal expert, a medical consultant, a software engineer, or a marketing specialist, you can create and train an AI agent to meet your specific needs.
 
 ### Key Benefits
 
