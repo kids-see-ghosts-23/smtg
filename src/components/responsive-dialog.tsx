@@ -14,7 +14,7 @@ import {
     DrawerContent,
     DrawerDescription,
     DrawerHeader,
-    DrawerTitle
+    DrawerTitle,
 } from "@/components/ui/drawer";
 
 interface ResponsiveDialogProps {
@@ -36,12 +36,12 @@ export const ResponsiveDialog = ({
     if (isMobile) {
         return (
             <Drawer open={open} onOpenChange={onOpenChange}>
-                <DrawerContent>
+                <DrawerContent className="max-h-[90vh]">
                     <DrawerHeader>
                         <DrawerTitle>{title}</DrawerTitle>
                         <DrawerDescription>{description}</DrawerDescription>
                     </DrawerHeader>
-                    <div className="p-4">{children}</div>
+                    <div className="p-4 overflow-y-auto flex-1">{children}</div>
                 </DrawerContent>
             </Drawer>
         );
@@ -49,13 +49,13 @@ export const ResponsiveDialog = ({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                     <DialogDescription>{description}</DialogDescription>
                 </DialogHeader>
 
-                {children}
+                <div className="overflow-y-auto flex-1">{children}</div>
             </DialogContent>
         </Dialog>
     );

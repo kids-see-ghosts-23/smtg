@@ -3,10 +3,13 @@ import { AgentGetOne } from "../../types";
 import { useTRPC } from "@/trpc/client";
 import { useRouter } from "next/navigation";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
+import { useForm, FormProvider } from "react-hook-form";
 import { z } from "zod";
 import { agentsInsertSchema } from "../../schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Github, Youtube } from "lucide-react";
+import { enhanceInstructions } from "@/lib/agent-instructions";
+import { fetchGithubRepo } from "@/lib/github-repo";
 
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -22,10 +25,12 @@ import {
     FormMessage,
 } from "@/components/ui/form";
 import { toast } from "sonner";
+import { AgentSources } from "./agent-sources";
 
 // Extend the schema to include githubRepo field
-const agentFormSchema = agentsInsertSchema.extend({
+export const agentFormSchema = agentsInsertSchema.extend({
     githubRepo: z.string().optional().nullable(),
+    youtubeUrl: z.string().optional(),
 });
 
 interface AgentFormProps {
@@ -90,6 +95,7 @@ export const AgentForm = ({
             name: initialValues?.name ?? "",
             instructions: initialValues?.instructions ?? "",
             githubRepo: initialValues?.githubRepo ?? "",
+            youtubeUrl: "",
         },
     });
 
@@ -99,175 +105,47 @@ export const AgentForm = ({
     const [isEnhancing, setIsEnhancing] = useState(false);
     const [hasEnhanced, setHasEnhanced] = useState(false);
     const [isFetchingRepo, setIsFetchingRepo] = useState(false);
+    const [showGithubRepo, setShowGithubRepo] = useState(
+        !!initialValues?.githubRepo
+    );
+    const [showYoutubeUrl, setShowYoutubeUrl] = useState(false);
 
     // Handle Groq API call to enhance instructions
-    const enhanceInstructions = async () => {
+    const handleEnhanceInstructions = async () => {
         const name = form.watch("name");
         const currentInstructions = form.watch("instructions");
-
-        if (!name.trim()) {
-            toast.warning("Please enter a name first.");
-            return;
-        }
 
         setIsEnhancing(true);
 
         try {
-            const response = await fetch(
-                "https://api.groq.com/openai/v1/chat/completions",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
-                    },
-                    body: JSON.stringify({
-                        model: "llama-3.3-70b-versatile",
-                        messages: [
-                            {
-                                role: "system",
-                                content:
-                                    "You are an expert at crafting clear, effective, and engaging AI agent instructions. Create highly specialized and detailed instructions for an AI agent based on the user's specialization request. The instructions should clearly define the agent's expertise area, specific capabilities, and behavioral guidelines. RETURN ONLY AND ONLY THE ENHANCED PROMPT, NO CONVERSATIONAL FILLER",
-                            },
-                            {
-                                role: "user",
-                                content: `Create specialized instructions for an AI agent named "${name}" that specializes in: "${
-                                    currentInstructions ||
-                                    "No specialization provided."
-                                }". 
-                            
-                            Requirements for the enhanced instructions:
-                            1. Clearly define the agent's area of expertise
-                            2. Specify what the agent should and shouldn't do
-                            3. Include behavioral guidelines and response style
-                            4. Define limitations and boundaries
-                            5. Make it highly detailed and actionable
-                            
-                            Format the response as a clear, structured prompt that will guide the agent's behavior in all interactions.`,
-                            },
-                        ],
-                        temperature: 0.7,
-                        max_tokens: 800,
-                    }),
-                }
-            );
+            const enhancedText = await enhanceInstructions({
+                name,
+                currentInstructions,
+            });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(
-                    errorData.error?.message || "Failed to enhance prompt."
-                );
-            }
-
-            const data = await response.json();
-            const enhancedText = data.choices[0]?.message?.content?.trim();
-
-            if (enhancedText) {
-                form.setValue("instructions", enhancedText);
-                toast.success("Specialized prompt created successfully!");
-                setHasEnhanced(true);
-            } else {
-                throw new Error("Empty response from Groq.");
-            }
-        } catch (error: any) {
-            console.error("Groq enhancement failed:", error);
-            toast.error(
-                error.message ||
-                    "Failed to create specialized prompt. Check your Groq API key and try again."
-            );
+            form.setValue("instructions", enhancedText);
+            setHasEnhanced(true);
+        } catch (error: unknown) {
+            return toast.error((error as Error).message);
         } finally {
             setIsEnhancing(false);
         }
     };
 
     // Handle GitHub repository fetching
-    const fetchGithubRepo = async () => {
+    const handleFetchGithubRepo = async () => {
         const repoUrl = form.watch("githubRepo");
 
-        if (!repoUrl?.trim()) {
-            toast.warning("Please enter a GitHub repository URL first.");
-            return;
-        }
+        if (!repoUrl) return;
 
-        // Extract owner and repo name from URL
-        const githubRegex =
-            /^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/.*)?$/;
-        const match = repoUrl.trim().match(githubRegex);
-
-        if (!match) {
-            toast.error("Please enter a valid GitHub repository URL.");
-            return;
-        }
-
-        const [, owner, repo] = match;
         setIsFetchingRepo(true);
 
         try {
-            // First, get repository details
-            const repoResponse = await fetch(
-                `https://api.github.com/repos/${owner}/${repo}`
-            );
-
-            if (!repoResponse.ok) {
-                throw new Error("Repository not found or inaccessible.");
-            }
-
-            const repoData = await repoResponse.json();
-
-            // Get repository contents to understand the codebase
-            const contentsResponse = await fetch(
-                repoData.contents_url.replace("{+path}", "")
-            );
-
-            if (!contentsResponse.ok) {
-                throw new Error("Unable to access repository contents.");
-            }
-
-            const contents = await contentsResponse.json();
-
-            // Look for common documentation files
-            const readme = contents.find(
-                (file: any) =>
-                    file.name.toLowerCase().includes("readme") &&
-                    file.type === "file"
-            );
-
-            let readmeContent = "";
-            if (readme) {
-                const readmeResponse = await fetch(readme.download_url);
-                if (readmeResponse.ok) {
-                    readmeContent = await readmeResponse.text();
-                    // Truncate to reasonable length
-                    readmeContent = readmeContent.substring(0, 1000) + "...";
-                }
-            }
-
-            // Create enhanced instructions based on repository information
-            const enhancedInstructions = `You are an expert on the ${
-                repoData.name
-            } repository by ${repoData.owner.login}.
-            
-Repository Description: ${repoData.description || "No description provided"}
-
-Primary Language: ${repoData.language || "Not specified"}
-
-Repository Information:
-${readmeContent || "No README content available"}
-
-Use this knowledge to provide accurate information and assistance related to this repository. When asked about code or functionality, reference the repository structure and content as needed.`;
-
-            // Update the instructions field with repository-based context
-            form.setValue("instructions", enhancedInstructions);
-            toast.success(
-                `Repository knowledge base created from ${repoData.full_name}!`
-            );
+            const githubData = await fetchGithubRepo({ repoUrl });
+            form.setValue("instructions", githubData);
             setHasEnhanced(true);
-        } catch (error: any) {
-            console.error("GitHub repository fetch failed:", error);
-            toast.error(
-                error.message ||
-                    "Failed to fetch repository information. Please check the URL and try again."
-            );
+        } catch (error: unknown) {
+            return toast.error((error as Error).message);
         } finally {
             setIsFetchingRepo(false);
         }
@@ -282,116 +160,231 @@ Use this knowledge to provide accurate information and assistance related to thi
     };
 
     return (
-        <Form {...form}>
-            <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-                <GeneratedAvatar
-                    seed={form.watch("name")}
-                    variant="botttsNeutral"
-                    className="border size-16"
-                />
-                <FormField
-                    name="name"
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Name</FormLabel>
-                            <FormControl>
-                                <Input
-                                    {...field}
-                                    placeholder="e.g. Math Tutor or Python Expert"
-                                />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    name="githubRepo"
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>GitHub Repository (Optional)</FormLabel>
-                            <FormDescription>
-                                Enter a GitHub repository URL to create a
-                                knowledge base for this agent.
-                            </FormDescription>
-                            <FormControl>
-                                <div className="flex gap-2">
+        <FormProvider {...form}>
+            <Form {...form}>
+                <form
+                    className="space-y-6"
+                    onSubmit={form.handleSubmit(onSubmit)}
+                >
+                    <GeneratedAvatar
+                        seed={form.watch("name")}
+                        variant="botttsNeutral"
+                        className="border size-16"
+                    />
+
+                    {/* Name Field */}
+                    <FormField
+                        name="name"
+                        control={form.control}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Name</FormLabel>
+                                <FormControl>
                                     <Input
-                                        placeholder="https://github.com/owner/repository"
-                                        className="flex-1"
                                         {...field}
-                                        value={field.value ?? ""}
+                                        placeholder="e.g. Math Tutor or Python Expert"
                                     />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Specialization Field */}
+                    <FormField
+                        name="instructions"
+                        control={form.control}
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Specialization</FormLabel>
+                                <FormDescription>
+                                    Describe what this agent should specialize
+                                    in. Be as specific as possible.
+                                </FormDescription>
+                                <FormControl>
+                                    <div className="relative">
+                                        <Textarea
+                                            {...field}
+                                            placeholder="e.g. Python programming tutor specializing in data structures and algorithms"
+                                            className="min-h-[120px] max-h-[300px] overflow-y-auto resize-none pr-32"
+                                        />
+
+                                        {!hasEnhanced && !isEnhancing && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="absolute bottom-2 right-2"
+                                                disabled={isPending}
+                                                onClick={
+                                                    handleEnhanceInstructions
+                                                }
+                                            >
+                                                {isEnhancing
+                                                    ? "Enhancing..."
+                                                    : "Enhance"}
+                                            </Button>
+                                        )}
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    {/* Knowledge Sources Section */}
+                    <div className="space-y-4">
+                        <div className="flex flex-col space-y-3">
+                            <h3 className="text-sm font-medium text-muted-foreground">
+                                Knowledge Sources (Optional)
+                            </h3>
+
+                            <div className="flex flex-wrap gap-2">
+                                {!showGithubRepo && (
                                     <Button
                                         type="button"
                                         variant="outline"
                                         size="sm"
-                                        disabled={isPending || isFetchingRepo}
-                                        onClick={fetchGithubRepo}
+                                        onClick={() => setShowGithubRepo(true)}
+                                        className="flex items-center gap-2"
                                     >
-                                        {isFetchingRepo
-                                            ? "Fetching..."
-                                            : "Use Repo"}
+                                        <Plus className="h-4 w-4" />
+                                        <Github className="h-4 w-4" />
+                                        GitHub Repository
+                                    </Button>
+                                )}
+
+                                {!showYoutubeUrl && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setShowYoutubeUrl(true)}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        <Youtube className="h-4 w-4" />
+                                        YouTube Video
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* GitHub Repository Section */}
+                        {showGithubRepo && (
+                            <FormField
+                                name="githubRepo"
+                                control={form.control}
+                                render={({ field }) => (
+                                    <FormItem className="border rounded-lg p-4 space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <FormLabel className="flex items-center gap-2">
+                                                <Github className="h-4 w-4" />
+                                                GitHub Repository
+                                            </FormLabel>
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setShowGithubRepo(false);
+                                                    form.setValue(
+                                                        "githubRepo",
+                                                        ""
+                                                    );
+                                                }}
+                                                className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                            >
+                                                ×
+                                            </Button>
+                                        </div>
+                                        <FormDescription className="text-xs">
+                                            Enter a GitHub repository URL to
+                                            create a knowledge base for this
+                                            agent.
+                                        </FormDescription>
+                                        <FormControl>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    placeholder="https://github.com/owner/repository"
+                                                    className="flex-1"
+                                                    {...field}
+                                                    value={field.value ?? ""}
+                                                />
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    disabled={
+                                                        isPending ||
+                                                        isFetchingRepo
+                                                    }
+                                                    onClick={
+                                                        handleFetchGithubRepo
+                                                    }
+                                                    className="shrink-0"
+                                                >
+                                                    {isFetchingRepo
+                                                        ? "Fetching..."
+                                                        : "Use Repo"}
+                                                </Button>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+
+                        {/* YouTube Video Section */}
+                        {showYoutubeUrl && (
+                            <div className="border rounded-lg p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Youtube className="h-4 w-4" />
+                                        <h4 className="text-sm font-medium">
+                                            YouTube Video
+                                        </h4>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setShowYoutubeUrl(false);
+                                            form.setValue("youtubeUrl", "");
+                                        }}
+                                        className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                    >
+                                        ×
                                     </Button>
                                 </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <FormField
-                    name="instructions"
-                    control={form.control}
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Specialization</FormLabel>
-                            <FormDescription>
-                                Describe what this agent should specialize in.
-                                Be as specific as possible.
-                            </FormDescription>
-                            <FormControl>
-                                <div className="relative">
-                                    <Textarea
-                                        {...field}
-                                        placeholder="e.g. Python programming tutor specializing in data structures and algorithms"
-                                        className="min-h-[120px] max-h-[300px] overflow-y-auto resize-none border border-input bg-background rounded-md shadow-sm focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                                    />
+                                <AgentSources
+                                    onSourcesProcessed={() =>
+                                        setHasEnhanced(true)
+                                    }
+                                />
+                            </div>
+                        )}
+                    </div>
 
-                                    {!hasEnhanced && !isEnhancing && (
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            className="absolute bottom-2 right-2"
-                                            disabled={isPending}
-                                            onClick={enhanceInstructions}
-                                        >
-                                            Create Specialized Prompt
-                                        </Button>
-                                    )}
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-                <div className="flex justify-between gap-x-2">
-                    {onCancel && (
-                        <Button
-                            variant="ghost"
-                            disabled={isPending}
-                            type="button"
-                            onClick={() => onCancel()}
-                        >
-                            Cancel
+                    <div className="flex justify-between gap-x-2">
+                        {onCancel && (
+                            <Button
+                                variant="ghost"
+                                disabled={isPending}
+                                type="button"
+                                onClick={() => onCancel()}
+                            >
+                                Cancel
+                            </Button>
+                        )}
+                        <Button disabled={isPending} type="submit">
+                            {isEdit ? "Update" : "Create"} Agent
                         </Button>
-                    )}
-                    <Button disabled={isPending} type="submit">
-                        {isEdit ? "Update" : "Create"} Specialized Agent
-                    </Button>
-                </div>
-            </form>
-        </Form>
+                    </div>
+                </form>
+            </Form>
+        </FormProvider>
     );
 };
