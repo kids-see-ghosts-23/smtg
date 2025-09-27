@@ -1,6 +1,91 @@
-# SMTG - AI Meeting Assistant
+# SMTG Notion - AI Meeting Assistant
 
-SMTG is an AI-powered meeting assistant that facilitates intelligent conversations between users and AI agents. The platform enables users to schedule meetings, participate in real-time video calls with AI agents, and receive automated summaries and follow-ups.
+<p align="center">
+  <img src="https://placehold.co/400x200/4f46e5/ffffff?text=SMTG+Notion" alt="SMTG Notion Logo" />
+</p>
+
+<p align="center">
+  <strong>Transform your meetings with AI-powered assistants</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-15+-black?style=flat-square&logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/TypeScript-5+-blue?style=flat-square&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/PostgreSQL-14+-blue?style=flat-square&logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="MIT License" />
+</p>
+
+## 📚 Table of Contents
+
+- [Features](#-features)
+- [Project Structure](#project-structure)
+- [Backend Information Flow](#backend-information-flow)
+- [Database Schema](#database-schema)
+- [TRPC Implementation](#trpc-implementation)
+- [API Endpoints](#api-endpoints)
+- [Detailed Documentation](#detailed-documentation)
+- [External Services Integration](#external-services-integration)
+- [Development](#development)
+- [Getting Started](#-getting-started)
+- [Workflow](#-workflow)
+
+SMTG Notion is an AI-powered meeting assistant that facilitates intelligent conversations between users and AI agents. The platform enables users to schedule meetings, participate in real-time video calls with AI agents, and receive automated summaries and follow-ups.
+
+## 🌟 Features
+
+<details>
+<summary>Click to expand feature list</summary>
+
+### AI-Powered Meetings
+- **Intelligent AI Agents**: Create specialized AI assistants with custom instructions
+- **Real-time Video Calls**: High-quality video conferencing with Stream.io integration
+- **Multi-modal Learning**: Train agents using YouTube videos, documents, and instructions
+
+### Comprehensive Meeting Management
+- **Meeting Scheduling**: Create and manage meetings with specific agents
+- **Specialized Agents**: Customize agents with domain-specific knowledge
+- **Meeting Recording**: Automatic recording of all sessions
+- **Transcription**: Real-time speech-to-text transcription
+
+### Post-Meeting Intelligence
+- **Automated Summaries**: AI-generated meeting summaries
+- **Actionable Insights**: Key takeaways and action items
+- **Email Integration**: Send summaries directly to email or Notion
+- **Interactive Q&A**: Ask questions about past meetings
+- **Knowledge Mindmaps**: Visual representation of meeting content
+- **Persistent Storage**: All meetings stored for future reference
+
+### Authentication & Security
+- **Multiple Auth Options**: Google, GitHub, or email/password authentication
+- **Secure Sessions**: Industry-standard security practices
+- **Data Privacy**: End-to-end encryption for sensitive information
+
+### Developer Experience
+- **Type-safe API**: TRPC integration for reliable communication
+- **Modern Stack**: Next.js, React, TypeScript, and PostgreSQL
+- **Extensible Architecture**: Modular design for easy customization
+
+</details>
+
+## 🎯 Project Overview
+
+SMTG Notion revolutionizes the way we conduct meetings by introducing AI agents that can be specialized for any domain or topic. Whether you need a legal expert, a medical consultant, a software engineer, or a marketing specialist, you can create and train an AI agent to meet your specific needs.
+
+### Key Benefits
+
+- **Domain Specialization**: Train agents on specific topics using instructions or multimedia content
+- **Intelligent Interaction**: Engage in natural conversations with AI agents that understand context
+- **Comprehensive Documentation**: Every meeting is automatically documented with transcripts, summaries, and recordings
+- **Seamless Integration**: Export meeting results directly to email or Notion
+- **Knowledge Retention**: Access past meetings and continue conversations with AI
+
+### Use Cases
+
+- **Business Meetings**: Conduct strategy sessions with specialized business advisors
+- **Educational Sessions**: Learn from AI tutors trained on specific subjects
+- **Healthcare Consultations**: Interact with medical AI assistants (for informational purposes)
+- **Legal Advice**: Discuss legal matters with AI trained on legal principles
+- **Technical Support**: Get help from AI specialists in programming, engineering, or IT
 
 ## Project Structure
 
@@ -348,7 +433,7 @@ Serverless event-driven architecture for background processing tasks.
 ### Neon Database
 PostgreSQL database managed with Drizzle ORM for data persistence.
 
-## Development
+## 🛠️ Development
 
 ### Prerequisites
 - Node.js 18+
@@ -357,7 +442,7 @@ PostgreSQL database managed with Drizzle ORM for data persistence.
 - OpenAI API key
 - Inngest account
 
-### Setup
+### Quick Setup
 1. Clone the repository
 2. Install dependencies: `npm install`
 3. Set up environment variables (see `.env.example`)
@@ -365,10 +450,82 @@ PostgreSQL database managed with Drizzle ORM for data persistence.
 5. Start development server: `npm run dev`
 
 ### Available Scripts
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run db:push` - Push database schema changes
-- `npm run db:studio` - Open Drizzle Studio
-- `npm run dev:webhook` - Start ngrok tunnel for webhook testing
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server with hot reloading |
+| `npm run build` | Build the application for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint to check for code issues |
+| `npm run db:push` | Push database schema changes to your database |
+| `npm run db:studio` | Open Drizzle Studio for database management |
+| `npm run dev:webhook` | Start ngrok tunnel for webhook testing |
+
+### Environment Variables
+Create a `.env` file based on `.env.example` with the following required variables:
+- `DATABASE_URL` - PostgreSQL database connection string
+- `NEXT_PUBLIC_APP_URL` - Your application URL
+- `AUTH_SECRET` - Secret for authentication
+- `AUTH_GITHUB_ID` & `AUTH_GITHUB_SECRET` - GitHub OAuth credentials
+- `AUTH_GOOGLE_ID` & `AUTH_GOOGLE_SECRET` - Google OAuth credentials
+- `STREAM_API_KEY` & `STREAM_API_SECRET` - Stream.io credentials
+- `OPENAI_API_KEY` - OpenAI API key
+- `INNGEST_SIGNING_KEY` & `INNGEST_EVENT_KEY` - Inngest credentials
+
+## 🚀 Getting Started
+
+1. **Sign Up/Sign In**: Create an account using Google, GitHub, or email/password
+2. **Create Your First Agent**: Customize an AI agent with specific instructions
+3. **Train Your Agent**: Enhance agent knowledge with YouTube videos or documents
+4. **Schedule a Meeting**: Set up a meeting with your specialized AI agent
+5. **Conduct Your Meeting**: Participate in real-time video calls
+6. **Review Results**: Access summaries, transcripts, and recordings
+7. **Take Action**: Send results to email/Notion or ask follow-up questions
+
+## 🔄 Workflow
+
+### 1. Authentication
+- Sign in using Google Auth, GitHub Auth, or email/password
+- Secure session management with Better Auth
+
+### 2. Agent Creation
+- Navigate to the Agents section
+- Create a new agent with a name and detailed instructions
+- Optionally, enhance the agent by adding a YouTube video for domain specialization
+- Save the agent for future meetings
+
+### 3. Meeting Setup
+- Go to the Meetings section
+- Create a new meeting by selecting your specialized agent
+- Schedule the meeting for a specific time or start immediately
+- Receive a shareable meeting link
+
+### 4. Meeting Execution
+- Join the meeting via the provided link
+- Participate in real-time video call with your AI agent
+- Engage in intelligent conversation based on the agent's specialization
+- Benefit from real-time transcription
+
+### 5. Post-Meeting Processing
+- Automatic meeting recording
+- AI-generated transcript with speaker identification
+- Intelligent summary with key points and action items
+- Mindmap visualization of meeting content
+
+### 6. Results & Actions
+- **Email/Notion Integration**: Send summaries directly to your preferred platform
+- **Transcript Access**: Review detailed conversation records
+- **Recording Playback**: Watch the meeting recording
+- **Interactive Q&A**: Ask questions about the meeting content
+- **Persistent Storage**: All data stored for future reference
+
+### 7. Future Reference
+- Access all past meetings from your dashboard
+- Search through transcripts and summaries
+- Re-engage with AI for follow-up questions
+- Export data to other platforms as needed
+
+## 🙏 Acknowledgments
+
+- Thanks to all the open-source projects that made this possible
+- Special recognition to Stream.io, OpenAI, and Inngest for their APIs
+- Appreciation to the Next.js and React communities
