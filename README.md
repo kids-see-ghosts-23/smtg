@@ -1,6 +1,6 @@
-# SMTG Notion - AI Meeting Assistant
+# SMTG - AI Meeting Assistant
 
-SMTG Notion is an AI-powered meeting assistant that facilitates intelligent conversations between users and AI agents. The platform enables users to schedule meetings, participate in real-time video calls with AI agents, and receive automated summaries and follow-ups.
+SMTG is an AI-powered meeting assistant that facilitates intelligent conversations between users and AI agents. The platform enables users to schedule meetings, participate in real-time video calls with AI agents, and receive automated summaries and follow-ups.
 
 ## Project Structure
 
