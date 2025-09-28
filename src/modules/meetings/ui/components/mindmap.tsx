@@ -263,6 +263,9 @@ const MindMapInner = ({ summary }: MindMapProps) => {
     const [isLoading, setIsLoading] = React.useState(false);
     const [renderError, setRenderError] = React.useState(null);
     const [isDownloading, setIsDownloading] = React.useState(false);
+    const [downloadSuccess, setDownloadSuccess] = React.useState<string | null>(
+        null
+    );
     const { getNodes, fitView } = useReactFlow();
 
     React.useEffect(() => {
@@ -602,70 +605,79 @@ const MindMapInner = ({ summary }: MindMapProps) => {
     };
 
     // Download functions
-    const downloadImage = async (format: 'png' | 'svg') => {
+    const downloadImage = async (format: "png" | "svg") => {
         if (nodes.length === 0) {
-            setRenderError('No mindmap to download');
+            setRenderError("No mindmap to download");
             return;
         }
 
         setIsDownloading(true);
-        
+
         try {
-            const reactFlowElement = document.querySelector('.react-flow__viewport') as HTMLElement;
-            
-            if (!reactFlowElement) {
-                throw new Error('ReactFlow viewport not found');
+            // Get the ReactFlow wrapper element which contains the full mindmap
+            const reactFlowWrapper = document.querySelector(
+                ".react-flow"
+            ) as HTMLElement;
+
+            if (!reactFlowWrapper) {
+                throw new Error("ReactFlow element not found");
             }
 
-            // Calculate the bounds of all nodes to capture the current layout
-            const nodesBounds = getRectOfNodes(nodes);
-            
-            // Add padding around the mindmap
-            const padding = 50;
-            const width = Math.max(800, nodesBounds.width + padding * 2);
-            const height = Math.max(600, nodesBounds.height + padding * 2);
-            
-            const fileName = `mindmap-${new Date().toISOString().split('T')[0]}`;
-            
+            // Create filename with timestamp
+            const timestamp = new Date()
+                .toISOString()
+                .replace(/[:.]/g, "-")
+                .slice(0, -5);
+            const fileName = `meeting-mindmap-${timestamp}`;
+
             const options = {
-                backgroundColor: '#fafafa',
-                width: width,
-                height: height,
+                backgroundColor: "#fafafa",
+                pixelRatio: format === "png" ? 2 : 1,
                 style: {
-                    width: `${width}px`,
-                    height: `${height}px`,
+                    transform: "scale(1)",
                 },
-                pixelRatio: 2, // Higher resolution for PNG
+                filter: (node: Element) => {
+                    // Filter out unwanted elements like controls and minimap
+                    if (
+                        node.classList?.contains("react-flow__controls") ||
+                        node.classList?.contains("react-flow__minimap") ||
+                        node.classList?.contains("react-flow__attribution")
+                    ) {
+                        return false;
+                    }
+                    return true;
+                },
             };
-            
-            if (format === 'png') {
-                const dataUrl = await toPng(reactFlowElement, options);
-                
-                const link = document.createElement('a');
-                link.download = `${fileName}.png`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+
+            let dataUrl: string;
+
+            if (format === "png") {
+                dataUrl = await toPng(reactFlowWrapper, options);
             } else {
-                const dataUrl = await toSvg(reactFlowElement, {
-                    ...options,
-                    pixelRatio: 1, // SVG doesn't need pixel ratio
-                });
-                
-                const link = document.createElement('a');
-                link.download = `${fileName}.svg`;
-                link.href = dataUrl;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                dataUrl = await toSvg(reactFlowWrapper, options);
             }
-            
+
+            // Create and trigger download
+            const link = document.createElement("a");
+            link.download = `${fileName}.${format}`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
             // Clear any previous errors
             setRenderError(null);
+
+            // Show success message
+            setDownloadSuccess(
+                `Downloaded ${format.toUpperCase()} successfully!`
+            );
+            setTimeout(() => setDownloadSuccess(null), 3000);
         } catch (error) {
-            console.error('Error downloading image:', error);
-            setRenderError(`Failed to download ${format.toUpperCase()}. Please try again.`);
+            console.error("Error downloading image:", error);
+            setRenderError(
+                `Failed to download ${format.toUpperCase()}. Please try again.`
+            );
         } finally {
             setIsDownloading(false);
         }
@@ -716,37 +728,82 @@ const MindMapInner = ({ summary }: MindMapProps) => {
                     <span className="text-xs text-gray-500">
                         Drag nodes to reorganize • Use controls to zoom & pan
                     </span>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 border-l border-gray-200 pl-2 ml-2">
+                        <span className="text-xs text-gray-400">Download:</span>
                         <button
-                            onClick={() => downloadImage('png')}
-                            disabled={isLoading || isDownloading || nodes.length === 0}
-                            className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors"
-                            title="Download as PNG"
+                            onClick={() => downloadImage("png")}
+                            disabled={
+                                isLoading || isDownloading || nodes.length === 0
+                            }
+                            className="text-xs text-green-600 hover:text-green-800 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded border border-green-200 hover:bg-green-50 transition-colors flex items-center gap-1"
+                            title="Download as PNG (High Resolution)"
                         >
-                            {isDownloading ? "Downloading..." : "PNG"}
+                            {isDownloading ? (
+                                <>
+                                    <div className="w-3 h-3 border border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                                    Processing...
+                                </>
+                            ) : (
+                                "PNG"
+                            )}
                         </button>
                         <button
-                            onClick={() => downloadImage('svg')}
-                            disabled={isLoading || isDownloading || nodes.length === 0}
-                            className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors"
-                            title="Download as SVG"
+                            onClick={() => downloadImage("svg")}
+                            disabled={
+                                isLoading || isDownloading || nodes.length === 0
+                            }
+                            className="text-xs text-purple-600 hover:text-purple-800 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded border border-purple-200 hover:bg-purple-50 transition-colors"
+                            title="Download as SVG (Vector Format)"
                         >
                             SVG
                         </button>
-                        <button
-                            onClick={() => generateMindMapFromSummary(summary)}
-                            disabled={isLoading}
-                            className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
-                        >
-                            {isLoading ? "Processing..." : "Refresh"}
-                        </button>
+                        <div className="border-l border-gray-200 pl-2 ml-1">
+                            <button
+                                onClick={() =>
+                                    generateMindMapFromSummary(summary)
+                                }
+                                disabled={isLoading}
+                                className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors"
+                                title="Regenerate mindmap"
+                            >
+                                {isLoading ? "Processing..." : "Refresh"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
 
             {renderError && (
-                <div className="text-red-500 text-sm bg-red-50 p-2 rounded">
+                <div className="text-red-500 text-sm bg-red-50 p-2 rounded border border-red-200 flex items-center gap-2">
+                    <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                    >
+                        <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
                     {renderError}
+                </div>
+            )}
+
+            {downloadSuccess && (
+                <div className="text-green-500 text-sm bg-green-50 p-2 rounded border border-green-200 flex items-center gap-2">
+                    <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                    >
+                        <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                    {downloadSuccess}
                 </div>
             )}
 
