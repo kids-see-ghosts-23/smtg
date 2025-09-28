@@ -1,351 +1,597 @@
-import { useState, useEffect, useRef } from "react";
-
-interface MermaidType {
-    initialize: (config: any) => void;
-    render: (
-        id: string,
-        definition: string
-    ) => Promise<{ svg: string; bindFunctions?: (element: Element) => void }>;
-}
+// @ts-nocheck
+import * as React from "react";
+import ReactFlow, {
+    Background,
+    Controls,
+    MiniMap,
+    useNodesState,
+    useEdgesState,
+    ConnectionMode,
+    Node,
+    Edge,
+    NodeTypes,
+    Handle,
+    Position,
+} from "reactflow";
+import "reactflow/dist/style.css";
 
 interface MindMapProps {
     summary: string;
 }
 
+// Define the JSON structure for the summary
+interface SummaryData {
+    [heading: string]: string | string[];
+}
+
+// Custom node component for the mindmap with improved styling
+const CustomNode: React.FC<{
+    data: { label: string; type: "root" | "section" | "item" };
+}> = ({ data }) => {
+    const getNodeStyle = () => {
+        switch (data.type) {
+            case "root":
+                return {
+                    backgroundColor: "#3b82f6",
+                    color: "white",
+                    borderRadius: "50%",
+                    width: "140px",
+                    height: "140px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    textAlign: "center" as const,
+                    border: "4px solid #1d4ed8",
+                    boxShadow: "0 4px 12px rgba(59, 130, 246, 0.3)",
+                    padding: "8px",
+                };
+            case "section":
+                return {
+                    backgroundColor: "#10b981",
+                    color: "white",
+                    borderRadius: "12px",
+                    padding: "16px 20px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    textAlign: "center" as const,
+                    border: "3px solid #047857",
+                    maxWidth: "220px",
+                    minWidth: "160px",
+                    boxShadow: "0 3px 10px rgba(16, 185, 129, 0.2)",
+                    lineHeight: "1.3",
+                };
+            case "item":
+                return {
+                    backgroundColor: "#ffffff",
+                    color: "#374151",
+                    borderRadius: "8px",
+                    padding: "12px 16px",
+                    fontSize: "12px",
+                    border: "2px solid #e5e7eb",
+                    maxWidth: "240px",
+                    minWidth: "180px",
+                    textAlign: "left" as const,
+                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                    lineHeight: "1.4",
+                    wordWrap: "break-word" as const,
+                };
+        }
+    };
+
+    return (
+        <div style={getNodeStyle()}>
+            {/* Add handles for connections */}
+            {data.type === "root" && (
+                <>
+                    <Handle
+                        type="source"
+                        position={Position.Top}
+                        id="top"
+                        style={{ background: "#1d4ed8", width: 8, height: 8 }}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Bottom}
+                        id="bottom"
+                        style={{ background: "#1d4ed8", width: 8, height: 8 }}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Left}
+                        id="left"
+                        style={{ background: "#1d4ed8", width: 8, height: 8 }}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="right"
+                        style={{ background: "#1d4ed8", width: 8, height: 8 }}
+                    />
+                </>
+            )}
+            {data.type === "section" && (
+                <>
+                    <Handle
+                        type="target"
+                        position={Position.Top}
+                        id="top"
+                        style={{ background: "#047857", width: 6, height: 6 }}
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Bottom}
+                        id="bottom"
+                        style={{ background: "#047857", width: 6, height: 6 }}
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Left}
+                        id="left"
+                        style={{ background: "#047857", width: 6, height: 6 }}
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Right}
+                        id="right"
+                        style={{ background: "#047857", width: 6, height: 6 }}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Top}
+                        id="source-top"
+                        style={{ background: "#10b981", width: 6, height: 6 }}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Bottom}
+                        id="source-bottom"
+                        style={{ background: "#10b981", width: 6, height: 6 }}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Left}
+                        id="source-left"
+                        style={{ background: "#10b981", width: 6, height: 6 }}
+                    />
+                    <Handle
+                        type="source"
+                        position={Position.Right}
+                        id="source-right"
+                        style={{ background: "#10b981", width: 6, height: 6 }}
+                    />
+                </>
+            )}
+            {data.type === "item" && (
+                <>
+                    <Handle
+                        type="target"
+                        position={Position.Top}
+                        id="top"
+                        style={{ background: "#6b7280", width: 4, height: 4 }}
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Bottom}
+                        id="bottom"
+                        style={{ background: "#6b7280", width: 4, height: 4 }}
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Left}
+                        id="left"
+                        style={{ background: "#6b7280", width: 4, height: 4 }}
+                    />
+                    <Handle
+                        type="target"
+                        position={Position.Right}
+                        id="right"
+                        style={{ background: "#6b7280", width: 4, height: 4 }}
+                    />
+                </>
+            )}
+            <div
+                style={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    display: "-webkit-box",
+                    WebkitLineClamp:
+                        data.type === "root"
+                            ? 3
+                            : data.type === "section"
+                            ? 2
+                            : 3,
+                    WebkitBoxOrient: "vertical" as const,
+                }}
+            >
+                {data.label}
+            </div>
+        </div>
+    );
+};
+
+const nodeTypes: NodeTypes = {
+    custom: CustomNode,
+};
+
+// Function to summarize content using OpenAI API
+const summarizeWithOpenAI = async (content: string): Promise<string> => {
+    try {
+        // If content is short, return as is
+        if (content.length <= 50) {
+            return content;
+        }
+
+        const response = await fetch("/api/summarize-mindmap", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ text: content }),
+        });
+
+        if (!response.ok) {
+            throw new Error("Failed to summarize content");
+        }
+
+        const data = await response.json();
+        return data.summary || content.substring(0, 50);
+    } catch (error) {
+        console.error("OpenAI summarization failed:", error);
+        // Fallback to manual summarization
+        return content.length > 50 ? content.substring(0, 47) + "..." : content;
+    }
+};
+
 export const MindMap = ({ summary }: MindMapProps) => {
-    const mermaidRef = useRef<HTMLDivElement>(null);
-    const [mermaid, setMermaid] = useState<MermaidType | null>(null);
-    const [mermaidCode, setMermaidCode] = useState<string>("");
-    const [renderError, setRenderError] = useState<string | null>(null);
+    const [nodes, setNodes, onNodesChange] = useNodesState([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const [isLoading, setIsLoading] = React.useState(false);
+    const [renderError, setRenderError] = React.useState(null);
 
-    useEffect(() => {
-        // Load mermaid dynamically on client side
-        const loadMermaid = async () => {
-            try {
-                const mermaidModule = await import("mermaid");
-                const mermaidInstance = mermaidModule.default;
-                mermaidInstance.initialize({
-                    startOnLoad: false,
-                    theme: "default",
-                    securityLevel: "loose",
-                    mindmap: {
-                        padding: 20,
-                        useMaxWidth: true,
-                    },
-                    flowchart: {
-                        htmlLabels: true,
-                        curve: 'basis',
-                        rankSpacing: 50,
-                        nodeSpacing: 50,
-                        padding: 15,
-                    }
-                });
-                setMermaid(mermaidInstance);
-            } catch (error) {
-                console.error("Failed to load mermaid:", error);
-                setRenderError("Failed to load mind map library");
+    React.useEffect(() => {
+        if (summary) {
+            generateMindMapFromSummary(summary);
+        }
+    }, [summary]);
+
+    // Parse summary into JSON structure with headings as keys
+    const parseSummaryToJSON = (summaryText) => {
+        const lines = summaryText
+            .split("\n")
+            .filter((line) => line.trim() !== "");
+        const result = {};
+
+        let currentHeading = "";
+        let currentContent = [];
+
+        for (const line of lines) {
+            const trimmedLine = line.trim();
+
+            // Check for headings (### or ####)
+            if (
+                trimmedLine.startsWith("### ") ||
+                trimmedLine.startsWith("#### ")
+            ) {
+                // Save previous section if it exists
+                if (currentHeading && currentContent.length > 0) {
+                    result[currentHeading] =
+                        currentContent.length === 1
+                            ? currentContent[0]
+                            : currentContent;
+                }
+
+                // Start new section
+                currentHeading = trimmedLine.replace(/^#+\s+/, "");
+                currentContent = [];
             }
-        };
-
-        loadMermaid();
-    }, []);
-
-    useEffect(() => {
-        if (summary && mermaid) {
-            const mindmapCode = generateEnhancedMindMap(summary);
-            setMermaidCode(mindmapCode);
-        }
-    }, [summary, mermaid]);
-
-    useEffect(() => {
-        if (mermaidCode && mermaidRef.current && mermaid) {
-            renderMermaid();
-        }
-    }, [mermaidCode, mermaid]);
-
-    const renderMermaid = async () => {
-        if (!mermaidRef.current || !mermaid) return;
-
-        try {
-            setRenderError(null);
-            mermaidRef.current.innerHTML = ''; // Clear previous content
-            const { svg, bindFunctions } = await mermaid.render(
-                `mermaid-summary-${Date.now()}`,
-                mermaidCode
-            );
-            if (mermaidRef.current) {
-                mermaidRef.current.innerHTML = svg;
-                bindFunctions?.(mermaidRef.current);
+            // Check for list items
+            else if (
+                trimmedLine.startsWith("- ") ||
+                trimmedLine.startsWith("* ")
+            ) {
+                const listItem = trimmedLine.substring(2).trim();
+                if (listItem) {
+                    currentContent.push(listItem);
+                }
             }
-        } catch (error) {
-            console.error("Mermaid rendering error:", error);
-            setRenderError("Failed to render mind map. Please try again.");
-        }
-    };
-
-    const generateEnhancedMindMap = (summaryText: string): string => {
-        const meetingData = parseMeetingSummary(summaryText);
-        
-        // Use mindmap syntax for better visual representation
-        let code = "mindmap\n";
-        code += "  root((Meeting Summary))\n";
-        
-        // Add main branches for each category with content
-        if (meetingData.participants.length > 0) {
-            code += "    Participants\n";
-            meetingData.participants.slice(0, 5).forEach(participant => {
-                code += `      ${sanitizeForMermaid(participant)}\n`;
-            });
-        }
-        
-        if (meetingData.mainTopics.length > 0) {
-            code += "    Main Topics\n";
-            meetingData.mainTopics.slice(0, 5).forEach(topic => {
-                code += `      ${sanitizeForMermaid(topic)}\n`;
-            });
-        }
-        
-        if (meetingData.decisions.length > 0) {
-            code += "    Decisions\n";
-            meetingData.decisions.slice(0, 4).forEach(decision => {
-                code += `      ${sanitizeForMermaid(decision)}\n`;
-            });
-        }
-        
-        if (meetingData.actionItems.length > 0) {
-            code += "    Action Items\n";
-            meetingData.actionItems.slice(0, 4).forEach(action => {
-                code += `      ${sanitizeForMermaid(action)}\n`;
-            });
-        }
-        
-        if (meetingData.nextSteps.length > 0) {
-            code += "    Next Steps\n";
-            meetingData.nextSteps.slice(0, 4).forEach(step => {
-                code += `      ${sanitizeForMermaid(step)}\n`;
-            });
-        }
-        
-        if (meetingData.keyPoints.length > 0) {
-            code += "    Key Points\n";
-            meetingData.keyPoints.slice(0, 4).forEach(point => {
-                code += `      ${sanitizeForMermaid(point)}\n`;
-            });
-        }
-
-        // If mindmap doesn't work well, fall back to flowchart
-        if (code.split('\n').length < 5) {
-            return generateFlowchartFallback(meetingData);
-        }
-        
-        return code;
-    };
-
-    const generateFlowchartFallback = (meetingData: any): string => {
-        let code = "graph TD\n";
-        code += '    A[Meeting Summary]\n';
-        
-        let nodeIndex = 0;
-        const getNodeId = () => `N${nodeIndex++}`;
-        
-        // Create a more structured flowchart
-        if (meetingData.mainTopics.length > 0) {
-            const topicsId = getNodeId();
-            code += `    A --> ${topicsId}[Topics Discussed]\n`;
-            meetingData.mainTopics.slice(0, 3).forEach((topic: string) => {
-                const topicId = getNodeId();
-                code += `    ${topicsId} --> ${topicId}["${sanitizeForMermaid(topic, 40)}"]\n`;
-            });
-        }
-        
-        if (meetingData.decisions.length > 0) {
-            const decisionsId = getNodeId();
-            code += `    A --> ${decisionsId}[Key Decisions]\n`;
-            meetingData.decisions.slice(0, 3).forEach((decision: string) => {
-                const decisionId = getNodeId();
-                code += `    ${decisionsId} --> ${decisionId}["${sanitizeForMermaid(decision, 40)}"]\n`;
-            });
-        }
-        
-        if (meetingData.actionItems.length > 0) {
-            const actionsId = getNodeId();
-            code += `    A --> ${actionsId}[Action Items]\n`;
-            meetingData.actionItems.slice(0, 3).forEach((action: string) => {
-                const actionId = getNodeId();
-                code += `    ${actionsId} --> ${actionId}["${sanitizeForMermaid(action, 40)}"]\n`;
-            });
-        }
-        
-        if (meetingData.nextSteps.length > 0) {
-            const nextId = getNodeId();
-            code += `    A --> ${nextId}[Next Steps]\n`;
-            meetingData.nextSteps.slice(0, 3).forEach((step: string) => {
-                const stepId = getNodeId();
-                code += `    ${nextId} --> ${stepId}["${sanitizeForMermaid(step, 40)}"]\n`;
-            });
-        }
-        
-        return code;
-    };
-
-    const parseMeetingSummary = (text: string) => {
-        // Clean the text first
-        const cleanText = text
-            .replace(/\[\d+:\d+\]/g, '') // Remove timestamps like [06:30]
-            .replace(/\(\d+:\d+\)/g, '') // Remove timestamps like (06:30)
-            .replace(/\d+:\d+/g, '') // Remove plain timestamps
-            .replace(/^\s*[-•*]\s*/gm, '') // Remove bullet points
-            .trim();
-
-        const result = {
-            participants: [] as string[],
-            mainTopics: [] as string[],
-            decisions: [] as string[],
-            actionItems: [] as string[],
-            nextSteps: [] as string[],
-            keyPoints: [] as string[],
-        };
-
-        // Split into sentences for better parsing
-        const sentences = cleanText
-            .split(/[.!?]+/)
-            .map(s => s.trim())
-            .filter(s => s.length > 10 && s.length < 200);
-
-        // Extract participants (names mentioned)
-        const namePattern = /\b([A-Z][a-z]+ (?:[A-Z][a-z]+ )?)/g;
-        const names = new Set<string>();
-        sentences.forEach(sentence => {
-            const matches = sentence.match(namePattern);
-            if (matches) {
-                matches.forEach(name => {
-                    // Filter out common words that might be capitalized
-                    if (!['The', 'This', 'That', 'These', 'Those', 'We', 'They', 'It'].includes(name.trim())) {
-                        names.add(name.trim());
-                    }
-                });
+            // Add other content
+            else if (
+                trimmedLine &&
+                !trimmedLine.startsWith(">") &&
+                !trimmedLine.startsWith("```")
+            ) {
+                if (currentHeading) {
+                    currentContent.push(trimmedLine);
+                }
             }
-        });
-        result.participants = Array.from(names).slice(0, 5);
+        }
 
-        // Extract content based on keywords and patterns
-        sentences.forEach(sentence => {
-            const lower = sentence.toLowerCase();
-            
-            // Skip sentences that look like technical logs or timestamps
-            if (lower.includes('connection') || 
-                lower.includes('checks the') || 
-                lower.includes('asks about the') ||
-                /^\d/.test(sentence)) {
-                return;
-            }
-
-            // Decisions and agreements
-            if (lower.includes('decided') || 
-                lower.includes('agreed') || 
-                lower.includes('concluded') ||
-                lower.includes('determined') ||
-                lower.includes('resolved')) {
-                result.decisions.push(extractMeaningfulPart(sentence));
-            }
-            
-            // Action items and tasks
-            else if (lower.includes('will') || 
-                     lower.includes('need to') || 
-                     lower.includes('should') ||
-                     lower.includes('must') ||
-                     lower.includes('action item') ||
-                     lower.includes('task') ||
-                     lower.includes('todo')) {
-                result.actionItems.push(extractMeaningfulPart(sentence));
-            }
-            
-            // Next steps and future plans
-            else if (lower.includes('next step') || 
-                     lower.includes('follow up') || 
-                     lower.includes('plan to') ||
-                     lower.includes('upcoming') ||
-                     lower.includes('schedule')) {
-                result.nextSteps.push(extractMeaningfulPart(sentence));
-            }
-            
-            // Main discussion topics
-            else if (lower.includes('discussed') || 
-                     lower.includes('talked about') || 
-                     lower.includes('covered') ||
-                     lower.includes('reviewed') ||
-                     lower.includes('presented') ||
-                     lower.includes('topic')) {
-                result.mainTopics.push(extractMeaningfulPart(sentence));
-            }
-            
-            // Key points and important information
-            else if (lower.includes('important') || 
-                     lower.includes('key') || 
-                     lower.includes('main') ||
-                     lower.includes('critical') ||
-                     lower.includes('essential') ||
-                     sentence.length > 20) {
-                result.keyPoints.push(extractMeaningfulPart(sentence));
-            }
-        });
-
-        // If we didn't extract enough structured data, extract general key points
-        if (result.mainTopics.length === 0 && result.decisions.length === 0 && result.actionItems.length === 0) {
-            // Extract the most meaningful sentences
-            const meaningfulSentences = sentences
-                .filter(s => !s.toLowerCase().includes('connection') && 
-                           !s.toLowerCase().includes('checks') &&
-                           s.length > 20)
-                .slice(0, 8);
-            
-            // Distribute sentences into categories
-            meaningfulSentences.forEach((sentence, index) => {
-                if (index < 3) result.mainTopics.push(sentence);
-                else if (index < 5) result.keyPoints.push(sentence);
-                else result.actionItems.push(sentence);
-            });
+        // Save the last section
+        if (currentHeading && currentContent.length > 0) {
+            result[currentHeading] =
+                currentContent.length === 1
+                    ? currentContent[0]
+                    : currentContent;
         }
 
         return result;
     };
 
-    const extractMeaningfulPart = (sentence: string): string => {
-        // Remove common phrase prefixes to get to the meat of the content
-        const prefixPatterns = [
-            /^(The team |We |They |It was |The meeting |Everyone |Participants? )/i,
-            /^(discussed |agreed |decided |talked about |covered |reviewed )/i,
-            /^(that |to |on |about )/i,
-        ];
-        
-        let clean = sentence;
-        prefixPatterns.forEach(pattern => {
-            clean = clean.replace(pattern, '');
-        });
-        
-        // Capitalize first letter
-        clean = clean.charAt(0).toUpperCase() + clean.slice(1);
-        
-        return clean;
+    // Helper function to determine the best connection points between two nodes
+    const getBestConnectionHandles = (sourcePos, targetPos) => {
+        const deltaX = targetPos.x - sourcePos.x;
+        const deltaY = targetPos.y - sourcePos.y;
+
+        // Determine primary direction
+        const absX = Math.abs(deltaX);
+        const absY = Math.abs(deltaY);
+
+        if (absX > absY) {
+            // Horizontal connection is dominant
+            if (deltaX > 0) {
+                return { sourceHandle: "right", targetHandle: "left" };
+            } else {
+                return { sourceHandle: "left", targetHandle: "right" };
+            }
+        } else {
+            // Vertical connection is dominant
+            if (deltaY > 0) {
+                return { sourceHandle: "bottom", targetHandle: "top" };
+            } else {
+                return { sourceHandle: "top", targetHandle: "bottom" };
+            }
+        }
     };
 
-    const sanitizeForMermaid = (text: string, maxLength: number = 30): string => {
-        return text
-            .replace(/["\[\](){}]/g, '') // Remove characters that break mermaid
-            .replace(/[:\n]/g, ' ') // Replace colons and newlines
-            .replace(/\s+/g, ' ') // Normalize whitespace
-            .trim()
-            .substring(0, maxLength)
-            .replace(/\s+$/, '') // Remove trailing spaces
-            + (text.length > maxLength ? '...' : '');
+    // Convert JSON data to React Flow nodes and edges with improved spacing
+    const convertJSONToNodes = async (data) => {
+        const nodes = [];
+        const edges = [];
+
+        // Create root node at center
+        const rootNode = {
+            id: "root",
+            type: "custom",
+            position: { x: 400, y: 300 },
+            data: {
+                label: "Meeting Summary",
+                type: "root",
+            },
+            draggable: true,
+        };
+        nodes.push(rootNode);
+
+        const sections = Object.keys(data);
+
+        // Handle case where there are no sections
+        if (sections.length === 0) {
+            return { nodes, edges };
+        }
+
+        // Calculate optimal layout based on number of sections
+        const rootX = 400;
+        const rootY = 300;
+
+        // Use different layout strategies based on section count
+        let sectionPositions = [];
+
+        if (sections.length <= 2) {
+            // Horizontal layout for 1-2 sections
+            sectionPositions = sections.map((_, index) => ({
+                x: rootX + (index === 0 ? -400 : 400),
+                y: rootY,
+            }));
+        } else if (sections.length <= 4) {
+            // Quadrant layout for 3-4 sections
+            const quadrants = [
+                { x: rootX - 350, y: rootY - 250 }, // Top-left
+                { x: rootX + 350, y: rootY - 250 }, // Top-right
+                { x: rootX - 350, y: rootY + 250 }, // Bottom-left
+                { x: rootX + 350, y: rootY + 250 }, // Bottom-right
+            ];
+            sectionPositions = sections.map((_, index) => quadrants[index]);
+        } else {
+            // Circular layout for 5+ sections with increased radius
+            const sectionRadius = Math.max(400, 300 + sections.length * 20);
+            const angleStep = (2 * Math.PI) / sections.length;
+            sectionPositions = sections.map((_, index) => {
+                const angle = index * angleStep - Math.PI / 2; // Start from top
+                return {
+                    x: rootX + Math.cos(angle) * sectionRadius,
+                    y: rootY + Math.sin(angle) * sectionRadius,
+                };
+            });
+        }
+
+        // Process sections and their content
+        for (
+            let sectionIndex = 0;
+            sectionIndex < sections.length;
+            sectionIndex++
+        ) {
+            const section = sections[sectionIndex];
+            const sectionPos = sectionPositions[sectionIndex];
+            const sectionId = `section-${sectionIndex}`;
+
+            // Summarize section heading with OpenAI
+            const sectionLabel = await summarizeWithOpenAI(section);
+
+            // Create section node
+            const sectionNode = {
+                id: sectionId,
+                type: "custom",
+                position: sectionPos,
+                data: {
+                    label: sectionLabel,
+                    type: "section",
+                },
+                draggable: true,
+            };
+            nodes.push(sectionNode);
+
+            // Create edge from root to section
+            const rootPos = { x: rootX, y: rootY };
+            const { sourceHandle, targetHandle } = getBestConnectionHandles(
+                rootPos,
+                sectionPos
+            );
+
+            const rootToSectionEdge = {
+                id: `root-${sectionId}`,
+                source: "root",
+                target: sectionId,
+                sourceHandle,
+                targetHandle,
+                type: "smoothstep",
+                style: { stroke: "#10b981", strokeWidth: 2 },
+                animated: false, // Reduce animation to improve clarity
+            };
+            edges.push(rootToSectionEdge);
+
+            // Process section content
+            const content = data[section];
+            let items = [];
+
+            if (typeof content === "string") {
+                items = [content];
+            } else if (Array.isArray(content)) {
+                items = content;
+            }
+
+            // Limit items to prevent overcrowding
+            const limitedItems = items.slice(0, 4); // Increased from 3 to 4
+
+            // Skip item creation if no content
+            if (limitedItems.length === 0) {
+                continue;
+            }
+
+            // Create item nodes with improved positioning
+            const itemSpacing = 200; // Increased spacing between items
+            const itemsPerRow = Math.ceil(Math.sqrt(limitedItems.length));
+
+            for (
+                let itemIndex = 0;
+                itemIndex < limitedItems.length;
+                itemIndex++
+            ) {
+                const item = limitedItems[itemIndex];
+                const itemSummary = await summarizeWithOpenAI(item);
+
+                // Calculate grid-based position relative to section
+                const row = Math.floor(itemIndex / itemsPerRow);
+                const col = itemIndex % itemsPerRow;
+                const totalRows = Math.ceil(limitedItems.length / itemsPerRow);
+
+                // Determine direction from root to section for item placement
+                const sectionDirection = {
+                    x: sectionPos.x - rootX,
+                    y: sectionPos.y - rootY,
+                };
+                const sectionDistance = Math.sqrt(
+                    sectionDirection.x ** 2 + sectionDirection.y ** 2
+                );
+
+                // Normalize direction
+                const normalizedDirection = {
+                    x: sectionDirection.x / sectionDistance,
+                    y: sectionDirection.y / sectionDistance,
+                };
+
+                // Create perpendicular vector for spreading items
+                const perpendicular = {
+                    x: -normalizedDirection.y,
+                    y: normalizedDirection.x,
+                };
+
+                // Calculate item position
+                const centerOffset = (itemsPerRow - 1) / 2;
+                const rowOffset = (totalRows - 1) / 2;
+
+                const itemX =
+                    sectionPos.x +
+                    normalizedDirection.x * (180 + row * 80) +
+                    (perpendicular.x * (col - centerOffset) * itemSpacing) / 2;
+
+                const itemY =
+                    sectionPos.y +
+                    normalizedDirection.y * (180 + row * 80) +
+                    (perpendicular.y * (col - centerOffset) * itemSpacing) / 2;
+
+                const itemId = `item-${sectionIndex}-${itemIndex}`;
+
+                const itemNode = {
+                    id: itemId,
+                    type: "custom",
+                    position: { x: itemX, y: itemY },
+                    data: {
+                        label: itemSummary,
+                        type: "item",
+                    },
+                    draggable: true,
+                };
+                nodes.push(itemNode);
+
+                // Create edge from section to item
+                const itemPos = { x: itemX, y: itemY };
+                const {
+                    sourceHandle: sectionSourceHandle,
+                    targetHandle: itemTargetHandle,
+                } = getBestConnectionHandles(sectionPos, itemPos);
+
+                const sectionToItemEdge = {
+                    id: `${sectionId}-${itemId}`,
+                    source: sectionId,
+                    target: itemId,
+                    sourceHandle: `source-${sectionSourceHandle}`,
+                    targetHandle: itemTargetHandle,
+                    type: "straight", // Changed from smoothstep to straight for clearer connections
+                    style: {
+                        stroke: "#9ca3af",
+                        strokeWidth: 1.5,
+                        strokeDasharray: "5,5", // Added dashed lines to differentiate levels
+                    },
+                    animated: false,
+                };
+                edges.push(sectionToItemEdge);
+            }
+        }
+
+        return { nodes, edges };
     };
 
-    if (!summary || !mermaid) {
+    // Main function to generate mindmap from summary
+    const generateMindMapFromSummary = async (summaryText) => {
+        setIsLoading(true);
+        setRenderError(null);
+
+        try {
+            // Parse summary into JSON structure
+            const jsonData = parseSummaryToJSON(summaryText);
+
+            // Convert to nodes and edges with OpenAI summarization
+            const { nodes: newNodes, edges: newEdges } =
+                await convertJSONToNodes(jsonData);
+
+            // Update the flow
+            setNodes(newNodes);
+            setEdges(newEdges);
+        } catch (error) {
+            console.error("Error generating mindmap:", error);
+            setRenderError("Failed to generate mind map from summary");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    if (!summary) {
         return (
             <div className="bg-white rounded-lg border px-4 py-5">
                 <div className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-                    <div className="h-64 bg-gray-100 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-4" />
+                    <div className="h-64 bg-gray-100 rounded" />
                 </div>
             </div>
         );
@@ -354,7 +600,9 @@ export const MindMap = ({ summary }: MindMapProps) => {
     if (summary.length === 0) {
         return (
             <div className="bg-white rounded-lg border px-4 py-5">
-                <p className="text-gray-500">No summary data available to generate mind map.</p>
+                <p className="text-gray-500">
+                    No summary data available to generate mind map.
+                </p>
             </div>
         );
     }
@@ -362,26 +610,103 @@ export const MindMap = ({ summary }: MindMapProps) => {
     return (
         <div className="bg-white rounded-lg border px-4 py-5 flex flex-col gap-y-4 w-full">
             <div className="flex justify-between items-center">
-                <p className="text-sm font-medium">Visual Summary</p>
-                <button 
-                    onClick={() => {
-                        const newCode = generateEnhancedMindMap(summary);
-                        setMermaidCode(newCode);
-                    }}
-                    className="text-xs text-blue-600 hover:text-blue-800"
-                >
-                    Refresh
-                </button>
+                <div className="flex items-center gap-4">
+                    <p className="text-sm font-medium">Mind Map</p>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <span>Summary</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-green-500 rounded"></div>
+                            <span>Sections</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 bg-gray-200 border border-gray-300 rounded"></div>
+                            <span>Details</span>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500">
+                        Drag nodes to reorganize • Use controls to zoom & pan
+                    </span>
+                    <button
+                        onClick={() => generateMindMapFromSummary(summary)}
+                        disabled={isLoading}
+                        className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                    >
+                        {isLoading ? "Processing..." : "Refresh"}
+                    </button>
+                </div>
             </div>
+
             {renderError && (
-                <div className="text-red-500 text-sm bg-red-50 p-2 rounded">{renderError}</div>
+                <div className="text-red-500 text-sm bg-red-50 p-2 rounded">
+                    {renderError}
+                </div>
             )}
+
             <div
-                ref={mermaidRef}
-                className="mermaid overflow-auto p-4 bg-gray-50 rounded"
-                style={{ minHeight: "400px", maxHeight: "600px" }}
+                style={{ height: "600px", width: "100%" }}
+                className="border rounded-lg overflow-hidden bg-gray-50"
             >
-                {!mermaidCode && "Generating visual summary..."}
+                <ReactFlow
+                    nodes={nodes}
+                    edges={edges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    nodeTypes={nodeTypes}
+                    connectionMode={ConnectionMode.Loose}
+                    fitView
+                    fitViewOptions={{
+                        padding: 100,
+                        minZoom: 0.1,
+                        maxZoom: 1.5,
+                        includeHiddenNodes: false,
+                    }}
+                    minZoom={0.1}
+                    maxZoom={2}
+                    defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
+                    proOptions={{ hideAttribution: true }}
+                    nodesDraggable={true}
+                    nodesConnectable={false}
+                    elementsSelectable={true}
+                >
+                    <Background
+                        color="#e5e7eb"
+                        gap={20}
+                        size={1}
+                        style={{ backgroundColor: "#fafafa" }}
+                    />
+                    <Controls
+                        showZoom={true}
+                        showFitView={true}
+                        showInteractive={true}
+                        position="bottom-right"
+                    />
+                    <MiniMap
+                        nodeStrokeColor="#374151"
+                        nodeColor={(node) => {
+                            switch (node.data.type) {
+                                case "root":
+                                    return "#3b82f6";
+                                case "section":
+                                    return "#10b981";
+                                case "item":
+                                    return "#ffffff";
+                                default:
+                                    return "#f9fafb";
+                            }
+                        }}
+                        nodeBorderRadius={8}
+                        maskColor="rgba(255, 255, 255, 0.2)"
+                        style={{
+                            backgroundColor: "rgba(255, 255, 255, 0.9)",
+                            border: "1px solid #e5e7eb",
+                        }}
+                    />
+                </ReactFlow>
             </div>
         </div>
     );
