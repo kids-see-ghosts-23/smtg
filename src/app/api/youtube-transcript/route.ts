@@ -42,13 +42,14 @@ ${truncatedTranscript}
 Use this transcript content to provide accurate information and assistance related to the video topic. When asked about specific parts of the video, reference the transcript as needed.`;
 
         return NextResponse.json({ content });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("YouTube transcript extraction failed:", error);
         return NextResponse.json(
             {
                 error:
-                    error.message ||
-                    "Failed to extract transcript from YouTube video. Please check the URL and try again.",
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to extract transcript from YouTube video. Please check the URL and try again.",
             },
             { status: 500 }
         );

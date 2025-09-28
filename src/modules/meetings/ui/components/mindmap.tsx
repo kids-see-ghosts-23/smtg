@@ -1,4 +1,3 @@
-// @ts-nocheck
 import * as React from "react";
 import ReactFlow, {
     Background,
@@ -7,15 +6,12 @@ import ReactFlow, {
     useNodesState,
     useEdgesState,
     ConnectionMode,
-    Node,
-    Edge,
     NodeTypes,
     Handle,
     Position,
-    useReactFlow,
     ReactFlowProvider,
-    getRectOfNodes,
-    getTransformForBounds,
+    Node,
+    Edge,
 } from "reactflow";
 import { toPng, toSvg } from "html-to-image";
 import "reactflow/dist/style.css";
@@ -24,14 +20,17 @@ interface MindMapProps {
     summary: string;
 }
 
-// Define the JSON structure for the summary
-interface SummaryData {
-    [heading: string]: string | string[];
+// Define proper types for nodes and edges
+interface CustomNodeData {
+    label: string;
+    type: "root" | "section" | "item";
 }
 
+type CustomEdge = Edge;
+
 // Custom node component for the mindmap with improved styling
-const CustomNode: React.FC<{
-    data: { label: string; type: "root" | "section" | "item" };
+const CustomNodeComponent: React.FC<{
+    data: CustomNodeData;
 }> = ({ data }) => {
     const getNodeStyle = () => {
         switch (data.type) {
@@ -217,7 +216,7 @@ const CustomNode: React.FC<{
 };
 
 const nodeTypes: NodeTypes = {
-    custom: CustomNode,
+    custom: CustomNodeComponent,
 };
 
 // Function to summarize content using OpenAI API
@@ -258,31 +257,280 @@ export const MindMap = ({ summary }: MindMapProps) => {
 };
 
 const MindMapInner = ({ summary }: MindMapProps) => {
-    const [nodes, setNodes, onNodesChange] = useNodesState([]);
-    const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    const [nodes, setNodes, onNodesChange] = useNodesState<CustomNodeData>([]);
+    const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdge>([]);
     const [isLoading, setIsLoading] = React.useState(false);
-    const [renderError, setRenderError] = React.useState(null);
+    const [renderError, setRenderError] = React.useState<string | null>(null);
     const [isDownloading, setIsDownloading] = React.useState(false);
     const [downloadSuccess, setDownloadSuccess] = React.useState<string | null>(
         null
     );
-    const { getNodes, fitView } = useReactFlow();
+    // Removed unused fitView variable
 
-    React.useEffect(() => {
-        if (summary) {
-            generateMindMapFromSummary(summary);
-        }
-    }, [summary]);
+    // Helper function to determine the best connection points between two nodes
+    const getBestConnectionHandles = React.useCallback(
+        (
+            sourcePos: { x: number; y: number },
+            targetPos: { x: number; y: number }
+        ) => {
+            const deltaX = targetPos.x - sourcePos.x;
+            const deltaY = targetPos.y - sourcePos.y;
+
+            // Determine primary direction
+            const absX = Math.abs(deltaX);
+            const absY = Math.abs(deltaY);
+
+            if (absX > absY) {
+                // Horizontal connection is dominant
+                if (deltaX > 0) {
+                    return { sourceHandle: "right", targetHandle: "left" };
+                } else {
+                    return { sourceHandle: "left", targetHandle: "right" };
+                }
+            } else {
+                // Vertical connection is dominant
+                if (deltaY > 0) {
+                    return { sourceHandle: "bottom", targetHandle: "top" };
+                } else {
+                    return { sourceHandle: "top", targetHandle: "bottom" };
+                }
+            }
+        },
+        []
+    );
+
+    // Convert JSON data to React Flow nodes and edges with improved spacing
+    const convertJSONToNodes = React.useCallback(
+        async (data: Record<string, string | string[]>) => {
+            const nodes: Node<CustomNodeData>[] = [];
+            const edges: CustomEdge[] = [];
+
+            // Create root node at center
+            const rootNode: Node<CustomNodeData> = {
+                id: "root",
+                type: "custom",
+                position: { x: 400, y: 300 },
+                data: {
+                    label: "Meeting Summary",
+                    type: "root",
+                },
+                draggable: true,
+            };
+            nodes.push(rootNode);
+
+            const sections = Object.keys(data);
+
+            // Handle case where there are no sections
+            if (sections.length === 0) {
+                return { nodes, edges };
+            }
+
+            // Calculate optimal layout based on number of sections
+            const rootX = 400;
+            const rootY = 300;
+
+            // Use different layout strategies based on section count
+            let sectionPositions: { x: number; y: number }[] = [];
+
+            if (sections.length <= 2) {
+                // Horizontal layout for 1-2 sections
+                sectionPositions = sections.map((_, index) => ({
+                    x: rootX + (index === 0 ? -400 : 400),
+                    y: rootY,
+                }));
+            } else if (sections.length <= 4) {
+                // Quadrant layout for 3-4 sections
+                const quadrants = [
+                    { x: rootX - 350, y: rootY - 250 }, // Top-left
+                    { x: rootX + 350, y: rootY - 250 }, // Top-right
+                    { x: rootX - 350, y: rootY + 250 }, // Bottom-left
+                    { x: rootX + 350, y: rootY + 250 }, // Bottom-right
+                ];
+                sectionPositions = sections.map((_, index) => quadrants[index]);
+            } else {
+                // Circular layout for 5+ sections with increased radius
+                const sectionRadius = Math.max(400, 300 + sections.length * 20);
+                const angleStep = (2 * Math.PI) / sections.length;
+                sectionPositions = sections.map((_, index) => {
+                    const angle = index * angleStep - Math.PI / 2; // Start from top
+                    return {
+                        x: rootX + Math.cos(angle) * sectionRadius,
+                        y: rootY + Math.sin(angle) * sectionRadius,
+                    };
+                });
+            }
+
+            // Process sections and their content
+            for (
+                let sectionIndex = 0;
+                sectionIndex < sections.length;
+                sectionIndex++
+            ) {
+                const section = sections[sectionIndex];
+                const sectionPos = sectionPositions[sectionIndex];
+                const sectionId = `section-${sectionIndex}`;
+
+                // Summarize section heading with OpenAI
+                const sectionLabel = await summarizeWithOpenAI(section);
+
+                // Create section node
+                const sectionNode: Node<CustomNodeData> = {
+                    id: sectionId,
+                    type: "custom",
+                    position: sectionPos,
+                    data: {
+                        label: sectionLabel,
+                        type: "section",
+                    },
+                    draggable: true,
+                };
+                nodes.push(sectionNode);
+
+                // Create edge from root to section
+                const rootPos = { x: rootX, y: rootY };
+                const { sourceHandle, targetHandle } = getBestConnectionHandles(
+                    rootPos,
+                    sectionPos
+                );
+
+                const rootToSectionEdge: CustomEdge = {
+                    id: `root-${sectionId}`,
+                    source: "root",
+                    target: sectionId,
+                    sourceHandle,
+                    targetHandle,
+                    type: "smoothstep",
+                    style: { stroke: "#10b981", strokeWidth: 2 },
+                    animated: false, // Reduce animation to improve clarity
+                };
+                edges.push(rootToSectionEdge);
+
+                // Process section content
+                const content = data[section];
+                let items: string[] = [];
+
+                if (typeof content === "string") {
+                    items = [content];
+                } else if (Array.isArray(content)) {
+                    items = content;
+                }
+
+                // Limit items to prevent overcrowding
+                const limitedItems = items.slice(0, 4); // Increased from 3 to 4
+
+                // Skip item creation if no content
+                if (limitedItems.length === 0) {
+                    continue;
+                }
+
+                // Create item nodes with improved positioning
+                const itemSpacing = 200; // Increased spacing between items
+                const itemsPerRow = Math.ceil(Math.sqrt(limitedItems.length));
+
+                for (
+                    let itemIndex = 0;
+                    itemIndex < limitedItems.length;
+                    itemIndex++
+                ) {
+                    const item = limitedItems[itemIndex];
+                    const itemSummary = await summarizeWithOpenAI(item);
+
+                    // Calculate grid-based position relative to section
+                    const row = Math.floor(itemIndex / itemsPerRow);
+                    const col = itemIndex % itemsPerRow;
+                    // Removed unused totalRows variable
+
+                    // Determine direction from root to section for item placement
+                    const sectionDirection = {
+                        x: sectionPos.x - rootX,
+                        y: sectionPos.y - rootY,
+                    };
+                    const sectionDistance = Math.sqrt(
+                        sectionDirection.x ** 2 + sectionDirection.y ** 2
+                    );
+
+                    // Normalize direction
+                    const normalizedDirection = {
+                        x: sectionDirection.x / sectionDistance,
+                        y: sectionDirection.y / sectionDistance,
+                    };
+
+                    // Create perpendicular vector for spreading items
+                    const perpendicular = {
+                        x: -normalizedDirection.y,
+                        y: normalizedDirection.x,
+                    };
+
+                    // Calculate item position
+                    const centerOffset = (itemsPerRow - 1) / 2;
+
+                    const itemX =
+                        sectionPos.x +
+                        normalizedDirection.x * (180 + row * 80) +
+                        (perpendicular.x * (col - centerOffset) * itemSpacing) /
+                            2;
+
+                    const itemY =
+                        sectionPos.y +
+                        normalizedDirection.y * (180 + row * 80) +
+                        (perpendicular.y * (col - centerOffset) * itemSpacing) /
+                            2;
+
+                    const itemId = `item-${sectionIndex}-${itemIndex}`;
+
+                    const itemNode: Node<CustomNodeData> = {
+                        id: itemId,
+                        type: "custom",
+                        position: { x: itemX, y: itemY },
+                        data: {
+                            label: itemSummary,
+                            type: "item",
+                        },
+                        draggable: true,
+                    };
+                    nodes.push(itemNode);
+
+                    // Create edge from section to item
+                    const itemPos = { x: itemX, y: itemY };
+                    const {
+                        sourceHandle: sectionSourceHandle,
+                        targetHandle: itemTargetHandle,
+                    } = getBestConnectionHandles(sectionPos, itemPos);
+
+                    const sectionToItemEdge: CustomEdge = {
+                        id: `${sectionId}-${itemId}`,
+                        source: sectionId,
+                        target: itemId,
+                        sourceHandle: `source-${sectionSourceHandle}`,
+                        targetHandle: itemTargetHandle,
+                        type: "straight", // Changed from smoothstep to straight for clearer connections
+                        style: {
+                            stroke: "#9ca3af",
+                            strokeWidth: 1.5,
+                            strokeDasharray: "5,5", // Added dashed lines to differentiate levels
+                        },
+                        animated: false,
+                    };
+                    edges.push(sectionToItemEdge);
+                }
+            }
+
+            return { nodes, edges };
+        },
+        [getBestConnectionHandles]
+    );
 
     // Parse summary into JSON structure with headings as keys
-    const parseSummaryToJSON = (summaryText) => {
+    const parseSummaryToJSON = (
+        summaryText: string
+    ): Record<string, string | string[]> => {
         const lines = summaryText
             .split("\n")
             .filter((line) => line.trim() !== "");
-        const result = {};
+        const result: Record<string, string | string[]> = {};
 
         let currentHeading = "";
-        let currentContent = [];
+        let currentContent: string[] = [];
 
         for (const line of lines) {
             const trimmedLine = line.trim();
@@ -337,272 +585,38 @@ const MindMapInner = ({ summary }: MindMapProps) => {
         return result;
     };
 
-    // Helper function to determine the best connection points between two nodes
-    const getBestConnectionHandles = (sourcePos, targetPos) => {
-        const deltaX = targetPos.x - sourcePos.x;
-        const deltaY = targetPos.y - sourcePos.y;
+    // Main function to generate mindmap from summary (wrapped in useCallback)
+    const generateMindMapFromSummary = React.useCallback(
+        async (summaryText: string) => {
+            setIsLoading(true);
+            setRenderError(null);
 
-        // Determine primary direction
-        const absX = Math.abs(deltaX);
-        const absY = Math.abs(deltaY);
+            try {
+                // Parse summary into JSON structure
+                const jsonData = parseSummaryToJSON(summaryText);
 
-        if (absX > absY) {
-            // Horizontal connection is dominant
-            if (deltaX > 0) {
-                return { sourceHandle: "right", targetHandle: "left" };
-            } else {
-                return { sourceHandle: "left", targetHandle: "right" };
+                // Convert to nodes and edges with OpenAI summarization
+                const { nodes: newNodes, edges: newEdges } =
+                    await convertJSONToNodes(jsonData);
+
+                // Update the flow
+                setNodes(newNodes);
+                setEdges(newEdges);
+            } catch (error) {
+                console.error("Error generating mindmap:", error);
+                setRenderError("Failed to generate mind map from summary");
+            } finally {
+                setIsLoading(false);
             }
-        } else {
-            // Vertical connection is dominant
-            if (deltaY > 0) {
-                return { sourceHandle: "bottom", targetHandle: "top" };
-            } else {
-                return { sourceHandle: "top", targetHandle: "bottom" };
-            }
+        },
+        [setNodes, setEdges, convertJSONToNodes]
+    );
+
+    React.useEffect(() => {
+        if (summary) {
+            generateMindMapFromSummary(summary);
         }
-    };
-
-    // Convert JSON data to React Flow nodes and edges with improved spacing
-    const convertJSONToNodes = async (data) => {
-        const nodes = [];
-        const edges = [];
-
-        // Create root node at center
-        const rootNode = {
-            id: "root",
-            type: "custom",
-            position: { x: 400, y: 300 },
-            data: {
-                label: "Meeting Summary",
-                type: "root",
-            },
-            draggable: true,
-        };
-        nodes.push(rootNode);
-
-        const sections = Object.keys(data);
-
-        // Handle case where there are no sections
-        if (sections.length === 0) {
-            return { nodes, edges };
-        }
-
-        // Calculate optimal layout based on number of sections
-        const rootX = 400;
-        const rootY = 300;
-
-        // Use different layout strategies based on section count
-        let sectionPositions = [];
-
-        if (sections.length <= 2) {
-            // Horizontal layout for 1-2 sections
-            sectionPositions = sections.map((_, index) => ({
-                x: rootX + (index === 0 ? -400 : 400),
-                y: rootY,
-            }));
-        } else if (sections.length <= 4) {
-            // Quadrant layout for 3-4 sections
-            const quadrants = [
-                { x: rootX - 350, y: rootY - 250 }, // Top-left
-                { x: rootX + 350, y: rootY - 250 }, // Top-right
-                { x: rootX - 350, y: rootY + 250 }, // Bottom-left
-                { x: rootX + 350, y: rootY + 250 }, // Bottom-right
-            ];
-            sectionPositions = sections.map((_, index) => quadrants[index]);
-        } else {
-            // Circular layout for 5+ sections with increased radius
-            const sectionRadius = Math.max(400, 300 + sections.length * 20);
-            const angleStep = (2 * Math.PI) / sections.length;
-            sectionPositions = sections.map((_, index) => {
-                const angle = index * angleStep - Math.PI / 2; // Start from top
-                return {
-                    x: rootX + Math.cos(angle) * sectionRadius,
-                    y: rootY + Math.sin(angle) * sectionRadius,
-                };
-            });
-        }
-
-        // Process sections and their content
-        for (
-            let sectionIndex = 0;
-            sectionIndex < sections.length;
-            sectionIndex++
-        ) {
-            const section = sections[sectionIndex];
-            const sectionPos = sectionPositions[sectionIndex];
-            const sectionId = `section-${sectionIndex}`;
-
-            // Summarize section heading with OpenAI
-            const sectionLabel = await summarizeWithOpenAI(section);
-
-            // Create section node
-            const sectionNode = {
-                id: sectionId,
-                type: "custom",
-                position: sectionPos,
-                data: {
-                    label: sectionLabel,
-                    type: "section",
-                },
-                draggable: true,
-            };
-            nodes.push(sectionNode);
-
-            // Create edge from root to section
-            const rootPos = { x: rootX, y: rootY };
-            const { sourceHandle, targetHandle } = getBestConnectionHandles(
-                rootPos,
-                sectionPos
-            );
-
-            const rootToSectionEdge = {
-                id: `root-${sectionId}`,
-                source: "root",
-                target: sectionId,
-                sourceHandle,
-                targetHandle,
-                type: "smoothstep",
-                style: { stroke: "#10b981", strokeWidth: 2 },
-                animated: false, // Reduce animation to improve clarity
-            };
-            edges.push(rootToSectionEdge);
-
-            // Process section content
-            const content = data[section];
-            let items = [];
-
-            if (typeof content === "string") {
-                items = [content];
-            } else if (Array.isArray(content)) {
-                items = content;
-            }
-
-            // Limit items to prevent overcrowding
-            const limitedItems = items.slice(0, 4); // Increased from 3 to 4
-
-            // Skip item creation if no content
-            if (limitedItems.length === 0) {
-                continue;
-            }
-
-            // Create item nodes with improved positioning
-            const itemSpacing = 200; // Increased spacing between items
-            const itemsPerRow = Math.ceil(Math.sqrt(limitedItems.length));
-
-            for (
-                let itemIndex = 0;
-                itemIndex < limitedItems.length;
-                itemIndex++
-            ) {
-                const item = limitedItems[itemIndex];
-                const itemSummary = await summarizeWithOpenAI(item);
-
-                // Calculate grid-based position relative to section
-                const row = Math.floor(itemIndex / itemsPerRow);
-                const col = itemIndex % itemsPerRow;
-                const totalRows = Math.ceil(limitedItems.length / itemsPerRow);
-
-                // Determine direction from root to section for item placement
-                const sectionDirection = {
-                    x: sectionPos.x - rootX,
-                    y: sectionPos.y - rootY,
-                };
-                const sectionDistance = Math.sqrt(
-                    sectionDirection.x ** 2 + sectionDirection.y ** 2
-                );
-
-                // Normalize direction
-                const normalizedDirection = {
-                    x: sectionDirection.x / sectionDistance,
-                    y: sectionDirection.y / sectionDistance,
-                };
-
-                // Create perpendicular vector for spreading items
-                const perpendicular = {
-                    x: -normalizedDirection.y,
-                    y: normalizedDirection.x,
-                };
-
-                // Calculate item position
-                const centerOffset = (itemsPerRow - 1) / 2;
-                const rowOffset = (totalRows - 1) / 2;
-
-                const itemX =
-                    sectionPos.x +
-                    normalizedDirection.x * (180 + row * 80) +
-                    (perpendicular.x * (col - centerOffset) * itemSpacing) / 2;
-
-                const itemY =
-                    sectionPos.y +
-                    normalizedDirection.y * (180 + row * 80) +
-                    (perpendicular.y * (col - centerOffset) * itemSpacing) / 2;
-
-                const itemId = `item-${sectionIndex}-${itemIndex}`;
-
-                const itemNode = {
-                    id: itemId,
-                    type: "custom",
-                    position: { x: itemX, y: itemY },
-                    data: {
-                        label: itemSummary,
-                        type: "item",
-                    },
-                    draggable: true,
-                };
-                nodes.push(itemNode);
-
-                // Create edge from section to item
-                const itemPos = { x: itemX, y: itemY };
-                const {
-                    sourceHandle: sectionSourceHandle,
-                    targetHandle: itemTargetHandle,
-                } = getBestConnectionHandles(sectionPos, itemPos);
-
-                const sectionToItemEdge = {
-                    id: `${sectionId}-${itemId}`,
-                    source: sectionId,
-                    target: itemId,
-                    sourceHandle: `source-${sectionSourceHandle}`,
-                    targetHandle: itemTargetHandle,
-                    type: "straight", // Changed from smoothstep to straight for clearer connections
-                    style: {
-                        stroke: "#9ca3af",
-                        strokeWidth: 1.5,
-                        strokeDasharray: "5,5", // Added dashed lines to differentiate levels
-                    },
-                    animated: false,
-                };
-                edges.push(sectionToItemEdge);
-            }
-        }
-
-        return { nodes, edges };
-    };
-
-    // Main function to generate mindmap from summary
-    const generateMindMapFromSummary = async (summaryText) => {
-        setIsLoading(true);
-        setRenderError(null);
-
-        try {
-            // Parse summary into JSON structure
-            const jsonData = parseSummaryToJSON(summaryText);
-
-            // Convert to nodes and edges with OpenAI summarization
-            const { nodes: newNodes, edges: newEdges } =
-                await convertJSONToNodes(jsonData);
-
-            // Update the flow
-            setNodes(newNodes);
-            setEdges(newEdges);
-        } catch (error) {
-            console.error("Error generating mindmap:", error);
-            setRenderError("Failed to generate mind map from summary");
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    }, [summary, generateMindMapFromSummary]);
 
     // Download functions
     const downloadImage = async (format: "png" | "svg") => {

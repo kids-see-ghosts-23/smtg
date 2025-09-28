@@ -3,11 +3,9 @@ import { useFormContext } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
     FormField,
     FormItem,
-    FormLabel,
     FormControl,
     FormDescription,
     FormMessage,
@@ -51,11 +49,12 @@ export const AgentSources = ({ onSourcesProcessed }: AgentSourcesProps) => {
 
             const { content } = await response.json();
             return content;
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("YouTube transcript extraction failed:", error);
             throw new Error(
-                error.message ||
-                    "Failed to extract transcript from YouTube video. Please check the URL and try again."
+                error instanceof Error
+                    ? error.message
+                    : "Failed to extract transcript from YouTube video. Please check the URL and try again."
             );
         } finally {
             setIsProcessing(false);
@@ -85,8 +84,12 @@ export const AgentSources = ({ onSourcesProcessed }: AgentSourcesProps) => {
             toast.success("YouTube video transcript processed successfully!");
             // Clear the input after successful processing
             form.setValue("youtubeUrl", "");
-        } catch (error: any) {
-            toast.error(error.message);
+        } catch (error: unknown) {
+            toast.error(
+                error instanceof Error
+                    ? error.message
+                    : "An unexpected error occurred"
+            );
         }
     };
 

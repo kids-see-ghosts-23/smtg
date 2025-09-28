@@ -178,7 +178,7 @@ export async function POST(req: NextRequest) {
 
             realtimeClient.on(
                 "conversation.item.input_audio_transcription.completed",
-                (event: any) => {
+                (event: { transcript: string }) => {
                     console.log(
                         "Audio transcription completed:",
                         event.transcript
@@ -190,7 +190,7 @@ export async function POST(req: NextRequest) {
                 console.log("Audio response completed");
             });
 
-            realtimeClient.on("error", (error: any) => {
+            realtimeClient.on("error", (error: Error) => {
                 console.error("Realtime client error:", error);
             });
 

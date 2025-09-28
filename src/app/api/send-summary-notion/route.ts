@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@notionhq/client";
-import { remark } from "remark";
-import remarkParse from "remark-parse";
+import { BlockObjectRequest } from "@notionhq/client/build/src/api-endpoints";
+
+type RichTextItem = {
+    type: "text";
+    text: {
+        content: string;
+    };
+    annotations?: {
+        bold?: boolean;
+        italic?: boolean;
+        code?: boolean;
+    };
+};
 
 // Function to convert markdown to Notion blocks
-function markdownToNotionBlocks(markdown: string): any[] {
-    const blocks: any[] = [];
+function markdownToNotionBlocks(markdown: string): BlockObjectRequest[] {
+    const blocks: BlockObjectRequest[] = [];
     const lines = markdown.split("\n");
 
     for (let i = 0; i < lines.length; i++) {
@@ -46,7 +57,6 @@ function markdownToNotionBlocks(markdown: string): any[] {
                     ],
                 },
             });
-
         } else if (line.startsWith("# ")) {
             blocks.push({
                 object: "block",
@@ -65,7 +75,7 @@ function markdownToNotionBlocks(markdown: string): any[] {
         }
         // Handle unordered lists
         else if (line.startsWith("- ") || line.startsWith("* ")) {
-            const bulletItems: any[] = [];
+            const bulletItems: BlockObjectRequest[] = [];
             let currentLine = i;
 
             // Collect all consecutive bullet points
@@ -100,7 +110,7 @@ function markdownToNotionBlocks(markdown: string): any[] {
         }
         // Handle ordered lists
         else if (/^\d+\.\s/.test(line)) {
-            const numberedItems: any[] = [];
+            const numberedItems: BlockObjectRequest[] = [];
             let currentLine = i;
 
             // Collect all consecutive numbered points
@@ -148,16 +158,9 @@ function markdownToNotionBlocks(markdown: string): any[] {
 }
 
 // Function to parse inline formatting (bold, italic, code)
-function parseInlineFormatting(text: string): any[] {
-    const richText: any[] = [];
-    let currentText = text;
-
-    // Simple regex patterns for formatting
-    const patterns = [
-        { regex: /\*\*(.*?)\*\*/g, format: { bold: true } },
-        { regex: /\*(.*?)\*/g, format: { italic: true } },
-        { regex: /`(.*?)`/g, format: { code: true } },
-    ];
+function parseInlineFormatting(text: string): RichTextItem[] {
+    const richText: RichTextItem[] = [];
+    const currentText = text;
 
     // For simplicity, we'll handle the text as a single rich text block
     // In a more complex implementation, you'd parse and split the formatting
@@ -311,18 +314,28 @@ export async function POST(request: NextRequest) {
             success: true,
             pageId: response.id,
         });
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Error creating Notion page:", error);
 
         // Handle specific Notion API errors
-        if (error.code === "unauthorized") {
+        if (
+            error &&
+            typeof error === "object" &&
+            "code" in error &&
+            error.code === "unauthorized"
+        ) {
             return NextResponse.json(
                 { error: "Invalid Notion token or insufficient permissions" },
                 { status: 401 }
             );
         }
 
-        if (error.code === "object_not_found") {
+        if (
+            error &&
+            typeof error === "object" &&
+            "code" in error &&
+            error.code === "object_not_found"
+        ) {
             return NextResponse.json(
                 { error: "Notion page not found or access denied" },
                 { status: 404 }

@@ -36,9 +36,6 @@ export const CompletedState = ({ data }: Props) => {
 
     // Safely handle potentially null values with fallbacks
     const meetingSummary = data.summary ?? "No summary available";
-    const meetingRecordingUrl = data.recordingUrl ?? "";
-    const meetingStartedAt = data.startedAt ?? new Date();
-    const meetingDuration = data.duration ?? 0;
 
     const handleSendEmail = async () => {
         if (!authData?.user?.email) {

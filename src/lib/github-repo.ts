@@ -13,6 +13,12 @@ interface GitHubRepoData {
     contents_url: string;
 }
 
+interface GitHubFile {
+    name: string;
+    type: string;
+    download_url?: string;
+}
+
 /**
  * Fetches GitHub repository information and creates enhanced instructions
  * @param params - Object containing repository URL
@@ -58,17 +64,17 @@ export async function fetchGithubRepo({
             throw new Error("Unable to access repository contents.");
         }
 
-        const contents = await contentsResponse.json();
+        const contents: GitHubFile[] = await contentsResponse.json();
 
         // Look for common documentation files
         const readme = contents.find(
-            (file: any) =>
+            (file: GitHubFile) =>
                 file.name.toLowerCase().includes("readme") &&
                 file.type === "file"
         );
 
         let readmeContent = "";
-        if (readme) {
+        if (readme && readme.download_url) {
             const readmeResponse = await fetch(readme.download_url);
             if (readmeResponse.ok) {
                 readmeContent = await readmeResponse.text();
@@ -95,11 +101,12 @@ Use this knowledge to provide accurate information and assistance related to thi
             `Repository knowledge base created from ${repoData.full_name}!`
         );
         return enhancedInstructions;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("GitHub repository fetch failed:", error);
         const errorMessage =
-            error.message ||
-            "Failed to fetch repository information. Please check the URL and try again.";
+            error instanceof Error
+                ? error.message
+                : "Failed to fetch repository information. Please check the URL and try again.";
         toast.error(errorMessage);
         throw new Error(errorMessage);
     }

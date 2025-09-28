@@ -75,11 +75,12 @@ export async function enhanceInstructions({
 
         toast.success("Specialized prompt created successfully!");
         return enhancedText;
-    } catch (error: any) {
+    } catch (error: unknown) {
         console.error("Groq enhancement failed:", error);
         const errorMessage =
-            error.message ||
-            "Failed to create specialized prompt. Check your Groq API key and try again.";
+            error instanceof Error
+                ? error.message
+                : "Failed to create specialized prompt. Check your Groq API key and try again.";
         toast.error(errorMessage);
         throw new Error(errorMessage);
     }
