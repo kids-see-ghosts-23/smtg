@@ -638,10 +638,11 @@ const MindMapInner = ({ summary }: MindMapProps) => {
                 },
                 filter: (node: Element) => {
                     // Filter out unwanted elements like controls and minimap
+                    const classList = (node as HTMLElement).classList;
                     if (
-                        node.classList?.contains("react-flow__controls") ||
-                        node.classList?.contains("react-flow__minimap") ||
-                        node.classList?.contains("react-flow__attribution")
+                        classList?.contains("react-flow__controls") ||
+                        classList?.contains("react-flow__minimap") ||
+                        classList?.contains("react-flow__attribution")
                     ) {
                         return false;
                     }

@@ -205,7 +205,7 @@ export const SignUpView = () => {
                                     type="submit"
                                     className="w-full"
                                 >
-                                    Login
+                                    Sign Up
                                 </Button>
                                 <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
                                     <span className="bg-card text-muted-foreground relative z-10 px-4">
@@ -250,22 +250,17 @@ export const SignUpView = () => {
 
                     <div className="bg-radial from-sidebar-accent to-sidebar relative md:flex flex-col gap-y-4 items-center justify-center">
                         <Image
-                            src="/logo.svg"
+                            src="/logo1.png"
                             alt="image"
-                            width={92}
-                            height={92}
+                            width={190}
+                            height={110}
                         />
-                        <p className="text-2xl font-semibold text-white">
-                            Smtg
-                        </p>
+                        
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-                By clicking continue, you agree to <a href="#">Smtg</a> and{" "}
-                <a href="#">Nthg</a>
-            </div>
+            
         </div>
     );
 };

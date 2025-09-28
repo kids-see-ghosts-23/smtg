@@ -201,22 +201,17 @@ export const SignInView = () => {
 
                     <div className="bg-radial from-sidebar-accent to-sidebar relative md:flex flex-col gap-y-4 items-center justify-center">
                         <Image
-                            width={92}
-                            height={92}
-                            src="/logo.svg"
+                            width={190}
+                            height={110}
+                            src="/logo1.png"
                             alt="image"
                         />
-                        <p className="text-2xl font-semibold text-white">
-                            Smtg
-                        </p>
+                      
                     </div>
                 </CardContent>
             </Card>
 
-            <div className="text-muted-foreground *:[a]:hover:text-primary text-center text-xs text-balance *:[a]:underline *:[a]:underline-offset-4">
-                By clicking continue, you agree to <a href="#">Smtg</a> and{" "}
-                <a href="#">Nthg</a>
-            </div>
+            
         </div>
     );
 };
