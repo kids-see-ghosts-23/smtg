@@ -12,7 +12,12 @@ import ReactFlow, {
     NodeTypes,
     Handle,
     Position,
+    useReactFlow,
+    ReactFlowProvider,
+    getRectOfNodes,
+    getTransformForBounds,
 } from "reactflow";
+import { toPng, toSvg } from "html-to-image";
 import "reactflow/dist/style.css";
 
 interface MindMapProps {
@@ -245,10 +250,20 @@ const summarizeWithOpenAI = async (content: string): Promise<string> => {
 };
 
 export const MindMap = ({ summary }: MindMapProps) => {
+    return (
+        <ReactFlowProvider>
+            <MindMapInner summary={summary} />
+        </ReactFlowProvider>
+    );
+};
+
+const MindMapInner = ({ summary }: MindMapProps) => {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [isLoading, setIsLoading] = React.useState(false);
     const [renderError, setRenderError] = React.useState(null);
+    const [isDownloading, setIsDownloading] = React.useState(false);
+    const { getNodes, fitView } = useReactFlow();
 
     React.useEffect(() => {
         if (summary) {
@@ -586,6 +601,76 @@ export const MindMap = ({ summary }: MindMapProps) => {
         }
     };
 
+    // Download functions
+    const downloadImage = async (format: 'png' | 'svg') => {
+        if (nodes.length === 0) {
+            setRenderError('No mindmap to download');
+            return;
+        }
+
+        setIsDownloading(true);
+        
+        try {
+            const reactFlowElement = document.querySelector('.react-flow__viewport') as HTMLElement;
+            
+            if (!reactFlowElement) {
+                throw new Error('ReactFlow viewport not found');
+            }
+
+            // Calculate the bounds of all nodes to capture the current layout
+            const nodesBounds = getRectOfNodes(nodes);
+            
+            // Add padding around the mindmap
+            const padding = 50;
+            const width = Math.max(800, nodesBounds.width + padding * 2);
+            const height = Math.max(600, nodesBounds.height + padding * 2);
+            
+            const fileName = `mindmap-${new Date().toISOString().split('T')[0]}`;
+            
+            const options = {
+                backgroundColor: '#fafafa',
+                width: width,
+                height: height,
+                style: {
+                    width: `${width}px`,
+                    height: `${height}px`,
+                },
+                pixelRatio: 2, // Higher resolution for PNG
+            };
+            
+            if (format === 'png') {
+                const dataUrl = await toPng(reactFlowElement, options);
+                
+                const link = document.createElement('a');
+                link.download = `${fileName}.png`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                const dataUrl = await toSvg(reactFlowElement, {
+                    ...options,
+                    pixelRatio: 1, // SVG doesn't need pixel ratio
+                });
+                
+                const link = document.createElement('a');
+                link.download = `${fileName}.svg`;
+                link.href = dataUrl;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            
+            // Clear any previous errors
+            setRenderError(null);
+        } catch (error) {
+            console.error('Error downloading image:', error);
+            setRenderError(`Failed to download ${format.toUpperCase()}. Please try again.`);
+        } finally {
+            setIsDownloading(false);
+        }
+    };
+
     if (!summary) {
         return (
             <div className="bg-white rounded-lg border px-4 py-5">
@@ -631,13 +716,31 @@ export const MindMap = ({ summary }: MindMapProps) => {
                     <span className="text-xs text-gray-500">
                         Drag nodes to reorganize • Use controls to zoom & pan
                     </span>
-                    <button
-                        onClick={() => generateMindMapFromSummary(summary)}
-                        disabled={isLoading}
-                        className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
-                    >
-                        {isLoading ? "Processing..." : "Refresh"}
-                    </button>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() => downloadImage('png')}
+                            disabled={isLoading || isDownloading || nodes.length === 0}
+                            className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors"
+                            title="Download as PNG"
+                        >
+                            {isDownloading ? "Downloading..." : "PNG"}
+                        </button>
+                        <button
+                            onClick={() => downloadImage('svg')}
+                            disabled={isLoading || isDownloading || nodes.length === 0}
+                            className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed px-2 py-1 rounded border border-blue-200 hover:bg-blue-50 transition-colors"
+                            title="Download as SVG"
+                        >
+                            SVG
+                        </button>
+                        <button
+                            onClick={() => generateMindMapFromSummary(summary)}
+                            disabled={isLoading}
+                            className="text-xs text-blue-600 hover:text-blue-800 disabled:opacity-50 px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                        >
+                            {isLoading ? "Processing..." : "Refresh"}
+                        </button>
+                    </div>
                 </div>
             </div>
 
