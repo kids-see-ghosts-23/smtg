@@ -12,17 +12,22 @@ interface Props {
 
 export const CallProvider = ({ meetingId, meetingName }: Props) => {
     const { data, isPending } = authClient.useSession();
-    
+
     // Check if this is a guest user for this specific meeting
-    const guestUser = typeof window !== 'undefined' ? localStorage.getItem(`guestUser_${meetingId}`) : null;
-    
+    const guestUser =
+        typeof window !== "undefined"
+            ? sessionStorage.getItem(`guestUser_${meetingId}`)
+            : null;
+
     if (guestUser) {
         const userData = JSON.parse(guestUser);
-        const userImage = userData.image ?? generateAvatarUri({ 
-            seed: userData.name, 
-            variant: "initials" 
-        });
-        
+        const userImage =
+            userData.image ??
+            generateAvatarUri({
+                seed: userData.name,
+                variant: "initials",
+            });
+
         return (
             <CallConnect
                 meetingId={meetingId}
@@ -30,10 +35,12 @@ export const CallProvider = ({ meetingId, meetingName }: Props) => {
                 userId={userData.id}
                 userName={userData.name}
                 userImage={userImage}
+                isGuest={true}
+                guestToken={userData.token}
             />
         );
     }
-    
+
     if (!data || isPending) {
         return (
             <div className="flex h-screen items-center justify-center bg-radial from-sidebar-accent to-sidebar">
@@ -41,17 +48,15 @@ export const CallProvider = ({ meetingId, meetingName }: Props) => {
             </div>
         );
     }
-    
+
     return (
         <CallConnect
             meetingId={meetingId}
             meetingName={meetingName}
             userId={data.user.id}
             userName={data.user.name}
-            userImage={
-                data.user.image ??
-                generateAvatarUri({ seed: data.user.name, variant: "initials" })
-            }
+            userImage={data.user.image ?? undefined}
+            isGuest={false}
         />
     );
 };

@@ -19,6 +19,8 @@ interface Props {
     userId?: string;
     userName?: string;
     userImage?: string;
+    isGuest?: boolean;
+    guestToken?: string;
 }
 
 export const CallConnect = ({
@@ -27,6 +29,8 @@ export const CallConnect = ({
     userId,
     userName,
     userImage,
+    isGuest = false,
+    guestToken,
 }: Props) => {
     const trpc = useTRPC();
     const { mutateAsync: generateToken } = useMutation(
@@ -35,11 +39,15 @@ export const CallConnect = ({
 
     const [client, setClient] = useState<StreamVideoClient>();
     useEffect(() => {
-        const guestUser = localStorage.getItem(`guestUser_${meetingId}`);
+        // Check for guest user in sessionStorage first
+        const sessionGuestUser =
+            typeof window !== "undefined"
+                ? sessionStorage.getItem(`guestUser_${meetingId}`)
+                : null;
         let userData;
-        
-        if (guestUser) {
-            userData = JSON.parse(guestUser);
+
+        if (sessionGuestUser) {
+            userData = JSON.parse(sessionGuestUser);
         } else if (userId && userName) {
             userData = { id: userId, name: userName, image: userImage };
         } else {
@@ -49,9 +57,9 @@ export const CallConnect = ({
 
         const initializeClient = async () => {
             let token;
-            
-            if (guestUser) {
-                // Use the token from localStorage for guests
+
+            if (sessionGuestUser) {
+                // Use the token from sessionStorage for guests
                 token = userData.token;
             } else {
                 // Generate token for authenticated users
@@ -77,7 +85,15 @@ export const CallConnect = ({
         };
 
         initializeClient();
-    }, [userId, userName, userImage, generateToken, meetingId]);
+    }, [
+        userId,
+        userName,
+        userImage,
+        generateToken,
+        meetingId,
+        isGuest,
+        guestToken,
+    ]);
 
     const [call, setCall] = useState<Call>();
 
