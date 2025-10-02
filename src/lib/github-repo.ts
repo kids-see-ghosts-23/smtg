@@ -9,7 +9,7 @@ interface AnalyzeApiResponse {
     summary: string;
     tree: string;
     chunk_count: number;
-    [key: string]: string | number | boolean; // For chunk_1, chunk_2, etc.
+    [key: `chunk_${number}`]: string; // For chunk_1, chunk_2, etc.
 }
 
 /**
@@ -50,9 +50,10 @@ export async function fetchGithubRepo({
         // Process all chunks and combine them
         let allChunksContent = "";
         for (let i = 1; i <= data.chunk_count; i++) {
-            const chunkKey = `chunk_${i}`;
-            if (data[chunkKey]) {
-                allChunksContent += data[chunkKey] + "\n\n";
+            const chunkKey = `chunk_${i}` as const;
+            const chunkValue = data[chunkKey];
+            if (chunkValue) {
+                allChunksContent += chunkValue + "\n\n";
             }
         }
 
