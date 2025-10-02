@@ -9,7 +9,7 @@ interface AnalyzeApiResponse {
     summary: string;
     tree: string;
     chunk_count: number;
-    [key: string]: any; // For chunk_1, chunk_2, etc.
+    [key: string]: string | number | boolean; // For chunk_1, chunk_2, etc.
 }
 
 /**
