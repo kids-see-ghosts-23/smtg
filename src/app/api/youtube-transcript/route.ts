@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { YoutubeTranscript } from "youtube-transcript-plus";
 
 export async function POST(request: NextRequest) {
     try {
@@ -12,32 +11,36 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Extract video ID from various YouTube URL formats
-        const videoId = extractYouTubeVideoId(url);
-        if (!videoId) {
-            return NextResponse.json(
-                { error: "Invalid YouTube URL" },
-                { status: 400 }
-            );
+        // Call the new subtitles API endpoint with YouTube URL in body
+        const response = await fetch(
+            "https://thecodeworks.in/smtgApi/api/subtitles",
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    youtube_url: url,
+                }),
+            }
+        );
+
+        if (!response.ok) {
+            throw new Error("Failed to fetch subtitles from API");
         }
 
-        const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+        const data = await response.json();
 
-        if (!transcript || transcript.length === 0) {
+        if (!data.success || !data.text) {
             return NextResponse.json(
-                { error: "No transcript available for this video" },
+                { error: "No subtitles available for this video" },
                 { status: 404 }
             );
         }
 
-        const fullTranscript = transcript.map((t) => t.text).join(" ");
-        const truncatedTranscript =
-            fullTranscript.length > 5000
-                ? fullTranscript.substring(0, 5000) + "..."
-                : fullTranscript;
-
-        const content = `YouTube Video Transcript Content:
-${truncatedTranscript}
+        // Format the content for the agent
+        const content = `YouTube Video Subtitles/Transcript Content:
+${data.text}
 
 Use this transcript content to provide accurate information and assistance related to the video topic. When asked about specific parts of the video, reference the transcript as needed.`;
 
@@ -54,12 +57,4 @@ Use this transcript content to provide accurate information and assistance relat
             { status: 500 }
         );
     }
-}
-
-// Extract YouTube video ID from URL
-function extractYouTubeVideoId(url: string): string | null {
-    const regExp =
-        /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return match && match[2].length === 11 ? match[2] : null;
 }

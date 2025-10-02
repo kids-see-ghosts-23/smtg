@@ -4,19 +4,12 @@ interface FetchGithubRepoParams {
     repoUrl: string;
 }
 
-interface GitHubRepoData {
-    name: string;
-    owner: { login: string };
-    description: string | null;
-    language: string | null;
-    full_name: string;
-    contents_url: string;
-}
-
-interface GitHubFile {
-    name: string;
-    type: string;
-    download_url?: string;
+interface AnalyzeApiResponse {
+    success: boolean;
+    summary: string;
+    tree: string;
+    chunk_count: number;
+    [key: string]: any; // For chunk_1, chunk_2, etc.
 }
 
 /**
@@ -32,74 +25,51 @@ export async function fetchGithubRepo({
         throw new Error("Repository URL is required");
     }
 
-    // Extract owner and repo name from URL
-    const githubRegex = /^https?:\/\/github\.com\/([^\/]+)\/([^\/]+)(\/.*)?$/;
-    const match = repoUrl.trim().match(githubRegex);
-
-    if (!match) {
-        toast.error("Please enter a valid GitHub repository URL.");
-        throw new Error("Invalid GitHub repository URL format");
-    }
-
-    const [, owner, repo] = match;
-
     try {
-        // First, get repository details
-        const repoResponse = await fetch(
-            `https://api.github.com/repos/${owner}/${repo}`
-        );
+        // Call the proxy API endpoint to avoid CORS issues
+        const response = await fetch("/api/github-analyze", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                repoUrl: repoUrl.trim(),
+            }),
+        });
 
-        if (!repoResponse.ok) {
-            throw new Error("Repository not found or inaccessible.");
+        if (!response.ok) {
+            throw new Error("Repository not found or analysis failed.");
         }
 
-        const repoData: GitHubRepoData = await repoResponse.json();
+        const data: AnalyzeApiResponse = await response.json();
 
-        // Get repository contents to understand the codebase
-        const contentsResponse = await fetch(
-            repoData.contents_url.replace("{+path}", "")
-        );
-
-        if (!contentsResponse.ok) {
-            throw new Error("Unable to access repository contents.");
+        if (!data.success) {
+            throw new Error("Repository analysis was not successful.");
         }
 
-        const contents: GitHubFile[] = await contentsResponse.json();
-
-        // Look for common documentation files
-        const readme = contents.find(
-            (file: GitHubFile) =>
-                file.name.toLowerCase().includes("readme") &&
-                file.type === "file"
-        );
-
-        let readmeContent = "";
-        if (readme && readme.download_url) {
-            const readmeResponse = await fetch(readme.download_url);
-            if (readmeResponse.ok) {
-                readmeContent = await readmeResponse.text();
-                // Truncate to reasonable length
-                readmeContent = readmeContent.substring(0, 5000) + "...";
+        // Process all chunks and combine them
+        let allChunksContent = "";
+        for (let i = 1; i <= data.chunk_count; i++) {
+            const chunkKey = `chunk_${i}`;
+            if (data[chunkKey]) {
+                allChunksContent += data[chunkKey] + "\n\n";
             }
         }
 
         // Create enhanced instructions based on repository information
-        const enhancedInstructions = `You are an expert on the ${
-            repoData.name
-        } repository by ${repoData.owner.login}.
-            
-Repository Description: ${repoData.description || "No description provided"}
+        const enhancedInstructions = `You are an expert on this repository.
 
-Primary Language: ${repoData.language || "Not specified"}
+${data.summary}
 
-Repository Information:
-${readmeContent || "No README content available"}
+## Directory Structure
+${data.tree}
 
-Use this knowledge to provide accurate information and assistance related to this repository. When asked about code or functionality, reference the repository structure and content as needed.`;
+## Repository Code and Files
+${allChunksContent}
 
-        toast.success(
-            `Repository knowledge base created from ${repoData.full_name}!`
-        );
+Use this knowledge to provide accurate information and assistance related to this repository. When asked about code or functionality, reference the repository structure and content as needed. You have access to the complete codebase information provided above.`;
+
+        toast.success(`Repository knowledge base created successfully!`);
         return enhancedInstructions;
     } catch (error: unknown) {
         console.error("GitHub repository fetch failed:", error);
