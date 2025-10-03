@@ -1,10 +1,7 @@
 import { z } from "zod";
 import { db } from "@/db";
 import { agents, meetings, user, guestUsers } from "@/db/schema";
-import {
-    createTRPCRouter,
-    protectedProcedure,
-} from "@/trpc/init";
+import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import {
     and,
     count,
@@ -103,19 +100,26 @@ export const meetingsRouter = createTRPCRouter({
                         }),
                     }))
                 );
-            const guestSpeakerIds = speakerIds.filter(id => id.startsWith('guest-'));
-            const guestSpeakers = guestSpeakerIds.map(id => {
+            const guestSpeakerIds = speakerIds.filter((id) =>
+                id.startsWith("guest-")
+            );
+            const guestSpeakers = guestSpeakerIds.map((id) => {
                 // Try to get guest user from database first
-                return db.select().from(guestUsers).where(eq(guestUsers.id, id))
+                return db
+                    .select()
+                    .from(guestUsers)
+                    .where(eq(guestUsers.id, id))
                     .then(([guestUser]) => {
                         if (guestUser) {
                             return {
                                 id: guestUser.id,
                                 name: guestUser.name,
-                                image: guestUser.image ?? generateAvatarUri({
-                                    seed: guestUser.name,
-                                    variant: "initials",
-                                }),
+                                image:
+                                    guestUser.image ??
+                                    generateAvatarUri({
+                                        seed: guestUser.name,
+                                        variant: "initials",
+                                    }),
                             };
                         }
                         // Fallback if not found in database
@@ -144,7 +148,11 @@ export const meetingsRouter = createTRPCRouter({
             // Wait for all guest speaker promises to resolve
             const resolvedGuestSpeakers = await Promise.all(guestSpeakers);
 
-            const speakers = [...userSpeakers, ...agentSpeakers, ...resolvedGuestSpeakers];
+            const speakers = [
+                ...userSpeakers,
+                ...agentSpeakers,
+                ...resolvedGuestSpeakers,
+            ];
             const transcriptWithSpeakers = transcript.map((item) => {
                 const speaker = speakers.find(
                     (speaker) => speaker.id === item.speaker_id
@@ -316,16 +324,41 @@ export const meetingsRouter = createTRPCRouter({
                 })
                 .from(meetings)
                 .innerJoin(agents, eq(meetings.agentId, agents.id))
-                .where(
-                    and(
-                        eq(meetings.id, input.id),
-                        eq(meetings.userId, ctx.auth.user.id)
-                    )
-                );
+                .where(eq(meetings.id, input.id)); // 👈 remove ownership check!
+
             if (!existingMeeting) {
                 throw new TRPCError({
                     code: "NOT_FOUND",
-                    message: "Agent not found",
+                    message: "Meeting not found",
+                });
+            }
+
+            // Only owners can view completed/cancelled meetings
+            if (
+                existingMeeting.status === "completed" ||
+                existingMeeting.status === "cancelled"
+            ) {
+                if (existingMeeting.userId !== ctx.auth.user.id) {
+                    throw new TRPCError({
+                        code: "UNAUTHORIZED",
+                        message: "Not allowed",
+                    });
+                }
+            }
+
+            // For active/upcoming meetings, allow any authenticated user to join
+            if (
+                existingMeeting.status === "active" ||
+                existingMeeting.status === "upcoming"
+            ) {
+                return existingMeeting;
+            }
+
+            // Fallback: only owner can 
+            if (existingMeeting.userId !== ctx.auth.user.id) {
+                throw new TRPCError({
+                    code: "UNAUTHORIZED",
+                    message: "Not allowed",
                 });
             }
 
@@ -349,7 +382,7 @@ export const meetingsRouter = createTRPCRouter({
                 .from(meetings)
                 .innerJoin(agents, eq(meetings.agentId, agents.id))
                 .where(eq(meetings.id, input.id));
-                
+
             if (!existingMeeting) {
                 throw new TRPCError({
                     code: "NOT_FOUND",

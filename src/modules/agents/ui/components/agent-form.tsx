@@ -7,7 +7,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { z } from "zod";
 import { agentsInsertSchema } from "../../schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Github, Youtube } from "lucide-react";
+import { Plus, Github, Youtube, Globe } from "lucide-react";
 import { enhanceInstructions } from "@/lib/agent-instructions";
 import { fetchGithubRepo } from "@/lib/github-repo";
 
@@ -31,6 +31,7 @@ import { AgentSources } from "./agent-sources";
 export const agentFormSchema = agentsInsertSchema.extend({
     githubRepo: z.string().optional().nullable(),
     youtubeUrl: z.string().optional(),
+    websiteUrl: z.string().optional(),
 });
 
 interface AgentFormProps {
@@ -96,6 +97,7 @@ export const AgentForm = ({
             instructions: initialValues?.instructions ?? "",
             githubRepo: initialValues?.githubRepo ?? "",
             youtubeUrl: "",
+            websiteUrl: "",
         },
     });
 
@@ -109,6 +111,7 @@ export const AgentForm = ({
         !!initialValues?.githubRepo
     );
     const [showYoutubeUrl, setShowYoutubeUrl] = useState(false);
+    const [showWebsiteUrl, setShowWebsiteUrl] = useState(false);
 
     // Handle Groq API call to enhance instructions
     const handleEnhanceInstructions = async () => {
@@ -267,6 +270,21 @@ export const AgentForm = ({
                                         YouTube Video
                                     </Button>
                                 )}
+                                
+                                {/* Website URL button */}
+                                {!showWebsiteUrl && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setShowWebsiteUrl(true)}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        <Globe className="h-4 w-4" />
+                                        Website URL
+                                    </Button>
+                                )}
                             </div>
                         </div>
 
@@ -363,6 +381,39 @@ export const AgentForm = ({
                                     onSourcesProcessed={() =>
                                         setHasEnhanced(true)
                                     }
+                                    sourceType="youtube"
+                                />
+                            </div>
+                        )}
+                        
+                        {/* Website URL Section */}
+                        {showWebsiteUrl && (
+                            <div className="border rounded-lg p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Globe className="h-4 w-4" />
+                                        <h4 className="text-sm font-medium">
+                                            Website URL
+                                        </h4>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setShowWebsiteUrl(false);
+                                            form.setValue("websiteUrl", "");
+                                        }}
+                                        className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                    >
+                                        ×
+                                    </Button>
+                                </div>
+                                <AgentSources
+                                    onSourcesProcessed={() =>
+                                        setHasEnhanced(true)
+                                    }
+                                    sourceType="website"
                                 />
                             </div>
                         )}

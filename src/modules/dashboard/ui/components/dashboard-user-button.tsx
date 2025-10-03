@@ -20,7 +20,7 @@ import {
 
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { GeneratedAvatar } from "@/components/generated-avatar";
-import { ChevronDownIcon, CreditCardIcon, LogOutIcon } from "lucide-react";
+import { ChevronDownIcon, CreditCardIcon, LogOutIcon, LinkIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,20 @@ export const DashboardUserButton = () => {
                 },
             },
         });
+    };
+
+    const connectToNotion = () => {
+        const params = new URLSearchParams({
+            client_id: process.env.NEXT_PUBLIC_NOTION_CLIENT_ID!,
+            response_type: "code",
+            owner: "user",
+            redirect_uri: process.env.NEXT_PUBLIC_NOTION_REDIRECT_URI!,
+        });
+        window.open(
+            `https://api.notion.com/v1/oauth/authorize?${params}`,
+            "notion-oauth",
+            "width=600,height=700"
+        );
     };
 
     if (isPending || !data?.user) {
@@ -75,6 +89,10 @@ export const DashboardUserButton = () => {
                         <DrawerDescription>{data.user.email}</DrawerDescription>
                     </DrawerHeader>
                     <DrawerFooter>
+                        <Button variant="outline" onClick={connectToNotion}>
+                            <LinkIcon className="size-4 text-black" />
+                            Connect Notion
+                        </Button>
                         <Button variant="outline" onClick={() => {}}>
                             <CreditCardIcon className="size-4 text-black" />
                             Billing
@@ -127,6 +145,13 @@ export const DashboardUserButton = () => {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem 
+                    className="cursor-pointer flex items-center justify-between"
+                    onClick={connectToNotion}
+                >
+                    Connect Notion
+                    <LinkIcon className="size-4" />
+                </DropdownMenuItem>
                 <DropdownMenuItem className="cursor-pointer flex items-center justify-between">
                     Billing
                     <CreditCardIcon className="size-4" />

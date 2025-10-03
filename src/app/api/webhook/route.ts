@@ -9,6 +9,7 @@ import {
     CallEndedEvent,
     CallTranscriptionReadyEvent,
     CallSessionParticipantLeftEvent,
+    CallSessionParticipantJoinedEvent,
     CallRecordingReadyEvent,
     CallSessionStartedEvent,
 } from "@stream-io/node-sdk";
@@ -218,6 +219,51 @@ export async function POST(req: NextRequest) {
             return NextResponse.json(
                 { error: "Failed to connect OpenAI agent" },
                 { status: 500 }
+            );
+        }
+    } else if (eventType === "call.session_participant_joined") {
+        const event = payload as CallSessionParticipantJoinedEvent;
+        const meetingId = event.call_cid.split(":")[1]; // call_cid is formatted as "type:id"
+        const newUserId = event.participant?.user?.id;
+
+        if (!meetingId || !newUserId) {
+            return NextResponse.json(
+                { error: "Missing meeting ID or user ID" },
+                { status: 400 }
+            );
+        }
+
+        const [existingMeeting] = await db
+            .select()
+            .from(meetings)
+            .where(eq(meetings.id, meetingId));
+
+        if (!existingMeeting) {
+            return NextResponse.json(
+                { error: "Meeting not found" },
+                { status: 404 }
+            );
+        }
+
+        const [existingAgent] = await db
+            .select()
+            .from(agents)
+            .where(eq(agents.id, existingMeeting.agentId));
+
+        if (!existingAgent) {
+            return NextResponse.json(
+                { error: "Agent not found" },
+                { status: 404 }
+            );
+        }
+
+        // If a new human joins (not the AI), log the event
+        if (newUserId !== existingAgent.id) {
+            console.log(
+                "New participant joined:",
+                newUserId,
+                "for meeting:",
+                meetingId
             );
         }
     } else if (eventType === "call.session_participant_left") {
