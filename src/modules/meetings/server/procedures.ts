@@ -19,12 +19,17 @@ import {
     MIN_PAGE_SIZE,
 } from "@/constants";
 import { TRPCError } from "@trpc/server";
-import { meetingsInsertSchema, meetingsUpdateSchema } from "../schemas";
+import {
+    meetingsInsertSchema,
+    meetingsUpdateSchema,
+    sendInvitationSchema,
+} from "../schemas";
 import { MeetingStatus, StreamTranscriptItem } from "../types";
 import { streamVideo } from "@/lib/stream-video";
 import { generateAvatarUri } from "@/lib/avatar";
 import JSONL from "jsonl-parse-stringify";
 import { streamChat } from "@/lib/stream-chat";
+import { EmailService } from "@/lib/email";
 
 export const meetingsRouter = createTRPCRouter({
     generateChatToken: protectedProcedure.mutation(async ({ ctx }) => {
@@ -354,7 +359,7 @@ export const meetingsRouter = createTRPCRouter({
                 return existingMeeting;
             }
 
-            // Fallback: only owner can 
+            // Fallback: only owner can
             if (existingMeeting.userId !== ctx.auth.user.id) {
                 throw new TRPCError({
                     code: "UNAUTHORIZED",
@@ -462,6 +467,98 @@ export const meetingsRouter = createTRPCRouter({
                 items: data,
                 total: total.count,
                 totalPages,
+            };
+        }),
+    sendInvitation: protectedProcedure
+        .input(sendInvitationSchema)
+        .mutation(async ({ ctx, input }) => {
+            const {
+                meetingId,
+                recipientEmails,
+                scheduledDate,
+                scheduledTime,
+                message,
+            } = input;
+
+            // Fetch meeting details
+            const [meeting] = await db
+                .select({
+                    id: meetings.id,
+                    name: meetings.name,
+                    userId: meetings.userId,
+                    agentId: meetings.agentId,
+                    agentName: agents.name,
+                })
+                .from(meetings)
+                .innerJoin(agents, eq(meetings.agentId, agents.id))
+                .where(
+                    and(
+                        eq(meetings.id, meetingId),
+                        eq(meetings.userId, ctx.auth.user.id)
+                    )
+                );
+
+            if (!meeting) {
+                throw new TRPCError({
+                    code: "NOT_FOUND",
+                    message: "Meeting not found or unauthorized",
+                });
+            }
+
+            // Construct meeting join URL
+            const baseUrl =
+                process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+            const joinUrl = `${baseUrl}/join/${meetingId}`;
+
+            // Parse scheduled date and time
+            const dateTimeString = `${scheduledDate}T${scheduledTime}`;
+            const scheduledDateTime = new Date(dateTimeString);
+
+            // Generate calendar event end time (1 hour after start)
+            const endDateTime = new Date(
+                scheduledDateTime.getTime() + 60 * 60 * 1000
+            );
+
+            // Initialize email service
+            const emailService = new EmailService();
+
+            // Send invitation emails to all recipients
+            const emailPromises = recipientEmails.map((email) =>
+                emailService.sendMeetingInvitation({
+                    to: email,
+                    meetingName: meeting.name,
+                    organizerName: ctx.auth.user.name,
+                    organizerEmail: ctx.auth.user.email,
+                    joinUrl,
+                    scheduledDate: scheduledDateTime.toLocaleDateString(
+                        "en-US",
+                        {
+                            weekday: "long",
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                        }
+                    ),
+                    scheduledTime: scheduledDateTime.toLocaleTimeString(
+                        "en-US",
+                        {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            timeZoneName: "short",
+                        }
+                    ),
+                    agentName: meeting.agentName,
+                    message: message || undefined,
+                    startDateTime: scheduledDateTime,
+                    endDateTime,
+                })
+            );
+
+            await Promise.all(emailPromises);
+
+            return {
+                success: true,
+                message: `Invitation sent to ${recipientEmails.length} recipient(s)`,
             };
         }),
 });

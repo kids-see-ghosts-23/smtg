@@ -87,6 +87,7 @@ export const MeetingIdView = ({ meetingId }: Props) => {
                     <div className="flex flex-col gap-4">
                         <UpcomingState
                             meetingId={meetingId}
+                            meetingName={data.name}
                         />
                         <MeetingJoinLink meetingId={meetingId} />
                     </div>

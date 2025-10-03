@@ -14,12 +14,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { Button } from "@/components/ui/button";
+import { SendInvitationDialog } from "@/components/send-invitation-dialog";
 
 import {
     ChevronRightIcon,
     MoreVerticalIcon,
     PencilIcon,
     TrashIcon,
+    MailIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -60,24 +62,37 @@ export const MeetingIdViewHeader = ({
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
-            {/* wihtout modal false, dialog becomes unclickable */}
-            <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost">
-                        <MoreVerticalIcon />
+            <div className="flex items-center gap-2">
+                {/* Send Invitation Button */}
+                <SendInvitationDialog
+                    meetingId={meetingId}
+                    meetingName={meetingName}
+                >
+                    <Button variant="outline" size="sm">
+                        <MailIcon className="size-4" />
+                        <span className="hidden sm:inline ml-2">Send Invitation</span>
                     </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={onEdit}>
-                        <PencilIcon className="size-4 text-black" />
-                        Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={onRemove}>
-                        <TrashIcon className="size-4 text-black" />
-                        Delete
-                    </DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+                </SendInvitationDialog>
+
+                {/* wihtout modal false, dialog becomes unclickable */}
+                <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="sm">
+                            <MoreVerticalIcon />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={onEdit}>
+                            <PencilIcon className="size-4 text-black" />
+                            Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={onRemove}>
+                            <TrashIcon className="size-4 text-black" />
+                            Delete
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            </div>
         </div>
     );
 };
