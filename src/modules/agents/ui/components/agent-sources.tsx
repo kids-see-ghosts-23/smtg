@@ -74,7 +74,7 @@ export const AgentSources = ({
             // Validate URL format
             try {
                 new URL(url);
-            } catch (error) {
+            } catch {
                 throw new Error("Invalid URL format");
             }
 
@@ -338,8 +338,8 @@ export const AgentSources = ({
                     render={() => (
                         <FormItem>
                             <FormDescription className="text-xs text-muted-foreground">
-                                Upload a PDF document to enhance your agent's
-                                knowledge using RAG.
+                                Upload a PDF document to enhance your agent
+                                knowledge using RAG
                             </FormDescription>
                             <FormControl>
                                 <div className="flex gap-2">

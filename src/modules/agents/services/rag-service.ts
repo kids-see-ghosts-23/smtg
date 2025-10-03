@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { agentDocuments, documentChunks, agents } from "@/db/schema";
-import { eq, and, asc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import OpenAI from "openai";
 import { saveDocument, saveDocumentChunks } from "@/lib/rag/db-utils";
 import {

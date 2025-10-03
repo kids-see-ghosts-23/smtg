@@ -3,12 +3,18 @@ declare module "pdf-parse" {
         PDFFormatVersion: string;
         IsAcroFormPresent: boolean;
         IsXFAPresent: boolean;
-        [key: string]: any;
+        [key: string]: string | boolean | number | undefined;
     }
 
     interface PDFMetadata {
-        _metadata: any;
-        [key: string]: any;
+        _metadata: Record<string, unknown>;
+        [key: string]:
+            | Record<string, unknown>
+            | string
+            | number
+            | boolean
+            | null
+            | undefined;
     }
 
     interface PDFData {
@@ -20,7 +26,16 @@ declare module "pdf-parse" {
         version: string;
     }
 
-    function PDFParser(dataBuffer: Buffer, options?: any): Promise<PDFData>;
+    interface PDFParserOptions {
+        max?: number;
+        version?: string;
+        [key: string]: unknown;
+    }
+
+    function PDFParser(
+        dataBuffer: Buffer,
+        options?: PDFParserOptions
+    ): Promise<PDFData>;
 
     export = PDFParser;
 }

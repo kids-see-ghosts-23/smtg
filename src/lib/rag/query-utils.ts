@@ -58,7 +58,6 @@ export async function queryRAG(
  */
 export async function enhanceInstructionsWithRAG(
     baseInstructions: string,
-    agentId: string
 ): Promise<string> {
     const enhancedInstructions = `${baseInstructions}
 

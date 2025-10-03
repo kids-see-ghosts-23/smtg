@@ -34,8 +34,7 @@ export async function extractTextFromPDF(
         console.log("[PDF-Processor] Text length:", data.text.length);
 
         // Format the text with page information
-        const numPages = data.numpages;
-        const text = data.text;
+         const text = data.text;
 
         // Split by form feed characters (page breaks) if available
         // Otherwise return the full text
