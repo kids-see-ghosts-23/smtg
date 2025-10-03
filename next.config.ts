@@ -20,6 +20,12 @@ const nextConfig: NextConfig = {
                 path: false,
                 crypto: false,
             };
+        } else {
+            // For server-side, mark pdf-parse as external to avoid bundling
+            config.externals = config.externals || [];
+            if (Array.isArray(config.externals)) {
+                config.externals.push("pdf-parse");
+            }
         }
         return config;
     },

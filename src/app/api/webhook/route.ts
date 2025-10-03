@@ -4,6 +4,7 @@ import { inngest } from "@/inngest/client";
 import { generateAvatarUri } from "@/lib/avatar";
 import { streamChat } from "@/lib/stream-chat";
 import { streamVideo } from "@/lib/stream-video";
+import { RAGService } from "@/modules/agents/services/rag-service";
 import {
     MessageNewEvent,
     CallEndedEvent,
@@ -139,9 +140,15 @@ export async function POST(req: NextRequest) {
                 existingAgent.instructions?.length || 0
             );
 
-            const instructions =
+            // Enhance instructions with RAG knowledge base
+            console.log("Enhancing instructions with RAG knowledge base...");
+            const instructions = await RAGService.enhanceInstructions(
+                existingAgent.id,
                 existingAgent.instructions ||
-                "You are a helpful AI assistant in a meeting. Listen to the conversation and respond when appropriate.";
+                    "You are a helpful AI assistant in a meeting. Listen to the conversation and respond when appropriate."
+            );
+
+            console.log("Enhanced instructions length:", instructions.length);
 
             // Add connection state logging
             console.log("Realtime client state:", {

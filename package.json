@@ -79,6 +79,8 @@
         "nuqs": "^2.4.3",
         "openai": "^5.11.0",
         "pdf-parse": "^1.1.1",
+        "pdfjs-dist": "^5.4.149",
+        "pgvector": "^0.2.1",
         "react": "^19.0.0",
         "react-day-picker": "^9.7.0",
         "react-dom": "^19.0.0",

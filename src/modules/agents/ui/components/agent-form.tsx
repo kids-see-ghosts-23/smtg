@@ -7,7 +7,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { z } from "zod";
 import { agentsInsertSchema } from "../../schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Github, Youtube, Globe } from "lucide-react";
+import { FileText, Github, Globe, Plus, Youtube } from "lucide-react";
 import { enhanceInstructions } from "@/lib/agent-instructions";
 import { fetchGithubRepo } from "@/lib/github-repo";
 
@@ -112,6 +112,7 @@ export const AgentForm = ({
     );
     const [showYoutubeUrl, setShowYoutubeUrl] = useState(false);
     const [showWebsiteUrl, setShowWebsiteUrl] = useState(false);
+    const [showPdfUpload, setShowPdfUpload] = useState(false);
 
     // Handle Groq API call to enhance instructions
     const handleEnhanceInstructions = async () => {
@@ -270,7 +271,7 @@ export const AgentForm = ({
                                         YouTube Video
                                     </Button>
                                 )}
-                                
+
                                 {/* Website URL button */}
                                 {!showWebsiteUrl && (
                                     <Button
@@ -283,6 +284,21 @@ export const AgentForm = ({
                                         <Plus className="h-4 w-4" />
                                         <Globe className="h-4 w-4" />
                                         Website URL
+                                    </Button>
+                                )}
+
+                                {/* PDF Upload button */}
+                                {!showPdfUpload && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setShowPdfUpload(true)}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        <FileText className="h-4 w-4" />
+                                        PDF Document
                                     </Button>
                                 )}
                             </div>
@@ -382,10 +398,11 @@ export const AgentForm = ({
                                         setHasEnhanced(true)
                                     }
                                     sourceType="youtube"
+                                    agentId={initialValues?.id}
                                 />
                             </div>
                         )}
-                        
+
                         {/* Website URL Section */}
                         {showWebsiteUrl && (
                             <div className="border rounded-lg p-4 space-y-3">
@@ -414,6 +431,40 @@ export const AgentForm = ({
                                         setHasEnhanced(true)
                                     }
                                     sourceType="website"
+                                    agentId={initialValues?.id}
+                                />
+                            </div>
+                        )}
+
+                        {/* PDF Upload Section */}
+                        {showPdfUpload && (
+                            <div className="border rounded-lg p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <FileText className="h-4 w-4" />
+                                        <h4 className="text-sm font-medium">
+                                            PDF Document
+                                        </h4>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setShowPdfUpload(false);
+                                            // Note: File inputs can't be easily controlled, so we don't reset the value here
+                                        }}
+                                        className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                                    >
+                                        ×
+                                    </Button>
+                                </div>
+                                <AgentSources
+                                    onSourcesProcessed={() =>
+                                        setHasEnhanced(true)
+                                    }
+                                    sourceType="pdf"
+                                    agentId={initialValues?.id}
                                 />
                             </div>
                         )}

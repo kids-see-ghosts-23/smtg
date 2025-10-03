@@ -1,5 +1,12 @@
 import { nanoid } from "nanoid";
-import { pgTable, text, timestamp, boolean, pgEnum } from "drizzle-orm/pg-core";
+import {
+    pgTable,
+    text,
+    timestamp,
+    boolean,
+    pgEnum,
+    vector,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
     id: text("id").primaryKey(),
@@ -115,5 +122,33 @@ export const guestUsers = pgTable("guest_users", {
         .notNull()
         .references(() => user.id, { onDelete: "cascade" }),
     image: text("image"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+// New tables for RAG PDF processing
+export const agentDocuments = pgTable("agent_documents", {
+    id: text("id")
+        .primaryKey()
+        .$defaultFn(() => nanoid()),
+    agentId: text("agent_id")
+        .notNull()
+        .references(() => agents.id, { onDelete: "cascade" }),
+    name: text("name").notNull(), // Original file name
+    url: text("url"), // URL to the stored document
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const documentChunks = pgTable("document_chunks", {
+    id: text("id")
+        .primaryKey()
+        .$defaultFn(() => nanoid()),
+    documentId: text("document_id")
+        .notNull()
+        .references(() => agentDocuments.id, { onDelete: "cascade" }),
+    pageNumber: text("page_number"), // Page number in the original document
+    chunkNumber: text("chunk_number"), // Chunk number within the page
+    content: text("content").notNull(), // Text content of the chunk
+    embedding: vector("embedding", { dimensions: 1536 }), // Embedding vector (OpenAI ada-002 dimensions)
     createdAt: timestamp("created_at").notNull().defaultNow(),
 });

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useFormContext } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -15,15 +15,18 @@ import { agentFormSchema } from "./agent-form";
 
 interface AgentSourcesProps {
     onSourcesProcessed?: (content: string) => void;
-    sourceType: "youtube" | "website";
+    sourceType: "youtube" | "website" | "pdf";
+    agentId?: string; // Optional agent ID for existing agents
 }
 
 export const AgentSources = ({
     onSourcesProcessed,
     sourceType,
+    agentId,
 }: AgentSourcesProps) => {
     const form = useFormContext<z.infer<typeof agentFormSchema>>();
     const [isProcessing, setIsProcessing] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Process YouTube video transcript
     const processYouTubeVideo = async (url: string) => {
@@ -71,7 +74,7 @@ export const AgentSources = ({
             // Validate URL format
             try {
                 new URL(url);
-            } catch {
+            } catch (error) {
                 throw new Error("Invalid URL format");
             }
 
@@ -104,6 +107,88 @@ export const AgentSources = ({
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    // Process PDF file for RAG
+    const processPDFFile = async (file: File) => {
+        try {
+            setIsProcessing(true);
+
+            // For existing agents, we can use the provided agentId
+            // For new agents, we'll need to handle this differently
+            if (!agentId) {
+                throw new Error(
+                    "Agent must be created first. Please save the agent before uploading documents."
+                );
+            }
+
+            // Create FormData for file upload
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("agentId", agentId);
+
+            // Call the RAG PDF API
+            const response = await fetch("/api/rag-pdf", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(
+                    errorData.error || "Failed to process PDF file"
+                );
+            }
+
+            const result = await response.json();
+
+            // Return a summary for the instructions
+            return `Document "${file.name}" has been processed and added to the agent's knowledge base using RAG. The document contains ${result.chunkCount} chunks of information that will be used to enhance the agent's responses.`;
+        } catch (error: unknown) {
+            console.error("PDF processing failed:", error);
+            throw new Error(
+                error instanceof Error
+                    ? error.message
+                    : "Failed to process PDF file. Please try again."
+            );
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // Handle PDF file selection
+    const handlePDFFileSelect = (
+        event: React.ChangeEvent<HTMLInputElement>
+    ) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        if (file.type !== "application/pdf") {
+            toast.error("Please select a PDF file.");
+            return;
+        }
+
+        if (file.size > 10 * 1024 * 1024) {
+            // 10MB limit
+            toast.error("File size exceeds 10MB limit.");
+            return;
+        }
+
+        processPDFFile(file)
+            .then((content) => {
+                updateInstructions(content);
+                toast.success("PDF processed successfully!");
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                }
+            })
+            .catch((error) => {
+                toast.error(
+                    error instanceof Error
+                        ? error.message
+                        : "An unexpected error occurred"
+                );
+            });
     };
 
     // Extract YouTube video ID from URL
@@ -241,6 +326,52 @@ export const AgentSources = ({
                                     </Button>
                                 </div>
                             </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
+
+            {sourceType === "pdf" && (
+                <FormField
+                    name="pdfFile"
+                    render={() => (
+                        <FormItem>
+                            <FormDescription className="text-xs text-muted-foreground">
+                                Upload a PDF document to enhance your agent's
+                                knowledge using RAG.
+                            </FormDescription>
+                            <FormControl>
+                                <div className="flex gap-2">
+                                    <Input
+                                        type="file"
+                                        accept=".pdf,application/pdf"
+                                        ref={fileInputRef}
+                                        onChange={handlePDFFileSelect}
+                                        className="flex-1"
+                                        disabled={isProcessing}
+                                    />
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={isProcessing}
+                                        onClick={() =>
+                                            fileInputRef.current?.click()
+                                        }
+                                        className="shrink-0"
+                                    >
+                                        {isProcessing
+                                            ? "Processing..."
+                                            : "Upload"}
+                                    </Button>
+                                </div>
+                            </FormControl>
+                            {!agentId && (
+                                <FormDescription className="text-xs text-muted-foreground">
+                                    Save the agent first to enable PDF upload.
+                                </FormDescription>
+                            )}
                             <FormMessage />
                         </FormItem>
                     )}
