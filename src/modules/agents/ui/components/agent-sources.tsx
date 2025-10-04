@@ -17,12 +17,16 @@ interface AgentSourcesProps {
     onSourcesProcessed?: (content: string) => void;
     sourceType: "youtube" | "website" | "pdf";
     agentId?: string; // Optional agent ID for existing agents
+    pendingPdfFiles?: File[]; // For new agents - files to upload after creation
+    onPendingPdfFilesChange?: (files: File[]) => void; // Callback to update pending files
 }
 
 export const AgentSources = ({
     onSourcesProcessed,
     sourceType,
     agentId,
+    pendingPdfFiles = [],
+    onPendingPdfFilesChange,
 }: AgentSourcesProps) => {
     const form = useFormContext<z.infer<typeof agentFormSchema>>();
     const [isProcessing, setIsProcessing] = useState(false);
@@ -114,12 +118,10 @@ export const AgentSources = ({
         try {
             setIsProcessing(true);
 
-            // For existing agents, we can use the provided agentId
-            // For new agents, we'll need to handle this differently
+            // This function is only called for existing agents
+            // For new agents, files are stored in pendingPdfFiles state
             if (!agentId) {
-                throw new Error(
-                    "Agent must be created first. Please save the agent before uploading documents."
-                );
+                throw new Error("Agent ID is required for PDF processing.");
             }
 
             // Create FormData for file upload
@@ -174,21 +176,36 @@ export const AgentSources = ({
             return;
         }
 
-        processPDFFile(file)
-            .then((content) => {
-                updateInstructions(content);
-                toast.success("PDF processed successfully!");
+        // If agent exists, process immediately
+        if (agentId) {
+            processPDFFile(file)
+                .then((content) => {
+                    updateInstructions(content);
+                    toast.success("PDF processed successfully!");
+                    if (fileInputRef.current) {
+                        fileInputRef.current.value = "";
+                    }
+                })
+                .catch((error) => {
+                    toast.error(
+                        error instanceof Error
+                            ? error.message
+                            : "An unexpected error occurred"
+                    );
+                });
+        } else {
+            // For new agents, add to pending files
+            if (onPendingPdfFilesChange) {
+                onPendingPdfFilesChange([...pendingPdfFiles, file]);
+                toast.success(`${file.name} added.`);
+                updateInstructions(
+                    `Document "${file.name}" has been processed and added to the agent's knowledge base using RAG.`
+                );
                 if (fileInputRef.current) {
                     fileInputRef.current.value = "";
                 }
-            })
-            .catch((error) => {
-                toast.error(
-                    error instanceof Error
-                        ? error.message
-                        : "An unexpected error occurred"
-                );
-            });
+            }
+        }
     };
 
     // Extract YouTube video ID from URL
@@ -338,8 +355,9 @@ export const AgentSources = ({
                     render={() => (
                         <FormItem>
                             <FormDescription className="text-xs text-muted-foreground">
-                                Upload a PDF document to enhance your agent
-                                knowledge using RAG
+                                {agentId
+                                    ? "Upload a PDF document to enhance your agent knowledge using RAG"
+                                    : "Upload PDF documents. They will be processed after creating the agent."}
                             </FormDescription>
                             <FormControl>
                                 <div className="flex gap-2">
@@ -363,14 +381,53 @@ export const AgentSources = ({
                                     >
                                         {isProcessing
                                             ? "Processing..."
-                                            : "Upload"}
+                                            : "Select"}
                                     </Button>
                                 </div>
                             </FormControl>
-                            {!agentId && (
-                                <FormDescription className="text-xs text-muted-foreground">
-                                    Save the agent first to enable PDF upload.
-                                </FormDescription>
+                            {!agentId && pendingPdfFiles.length > 0 && (
+                                <div className="space-y-2 mt-2">
+                                    <p className="text-xs font-medium">
+                                        Added files ({pendingPdfFiles.length}
+                                        ):
+                                    </p>
+                                    <div className="space-y-1">
+                                        {pendingPdfFiles.map((file, index) => (
+                                            <div
+                                                key={index}
+                                                className="flex items-center justify-between text-xs bg-muted p-2 rounded"
+                                            >
+                                                <span className="truncate flex-1">
+                                                    {file.name}
+                                                </span>
+                                                <Button
+                                                    type="button"
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-5 w-5 p-0 ml-2"
+                                                    onClick={() => {
+                                                        if (
+                                                            onPendingPdfFilesChange
+                                                        ) {
+                                                            onPendingPdfFilesChange(
+                                                                pendingPdfFiles.filter(
+                                                                    (_, i) =>
+                                                                        i !==
+                                                                        index
+                                                                )
+                                                            );
+                                                            toast.success(
+                                                                `${file.name} removed`
+                                                            );
+                                                        }
+                                                    }}
+                                                >
+                                                    ×
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             )}
                             <FormMessage />
                         </FormItem>

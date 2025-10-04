@@ -806,7 +806,7 @@ Note: The meeting host can start the meeting at any time. The scheduled time is 
         <body>
           <div class="container">
             <div class="header">
-              <div class="invitation-badge">📅 Meeting Invitation</div>
+              <div class="invitation-badge">Meeting Invitation</div>
               <h1 class="meeting-title">${meetingName}</h1>
               <p class="organizer">Organized by ${organizerName}</p>
             </div>
@@ -814,9 +814,6 @@ Note: The meeting host can start the meeting at any time. The scheduled time is 
             <div class="content-section">
               <div class="detail-card">
                 <div class="detail-row">
-                  <div class="detail-icon">
-                    <span style="font-size: 20px;">📅</span>
-                  </div>
                   <div class="detail-content">
                     <div class="detail-label">Date</div>
                     <div class="detail-value">${scheduledDate}</div>
@@ -824,9 +821,6 @@ Note: The meeting host can start the meeting at any time. The scheduled time is 
                 </div>
                 
                 <div class="detail-row">
-                  <div class="detail-icon">
-                    <span style="font-size: 20px;">🕐</span>
-                  </div>
                   <div class="detail-content">
                     <div class="detail-label">Time</div>
                     <div class="detail-value">${scheduledTime}</div>
@@ -834,9 +828,6 @@ Note: The meeting host can start the meeting at any time. The scheduled time is 
                 </div>
                 
                 <div class="detail-row">
-                  <div class="detail-icon">
-                    <span style="font-size: 20px;">🤖</span>
-                  </div>
                   <div class="detail-content">
                     <div class="detail-label">AI Agent</div>
                     <div class="detail-value">${agentName}</div>
@@ -855,16 +846,11 @@ Note: The meeting host can start the meeting at any time. The scheduled time is 
                       : ""
               }
 
-              <div class="info-box">
-                <p>
-                  <strong>Note:</strong> The meeting host can start the meeting at any time. 
-                  The scheduled time is provided as a reference for when you should join.
-                </p>
-              </div>
+              
 
               <div class="cta-section">
-                <a href="${joinUrl}" class="btn btn-primary">🎥 Join Meeting</a>
-                <a href="${googleCalendarUrl}" class="btn btn-secondary">📆 Add to Calendar</a>
+                <a href="${joinUrl}" class="btn btn-primary"> Join Meeting</a>
+                <a href="${googleCalendarUrl}" class="btn btn-secondary"> Add to Calendar</a>
               </div>
             </div>
             

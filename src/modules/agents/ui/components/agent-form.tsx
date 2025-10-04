@@ -51,10 +51,44 @@ export const AgentForm = ({
 
     const createAgent = useMutation(
         trpc.agents.create.mutationOptions({
-            onSuccess: async () => {
+            onSuccess: async (data) => {
                 await queryClient.invalidateQueries(
                     trpc.agents.getMany.queryOptions({})
                 );
+
+                // Upload pending PDF files if any
+                if (pendingPdfFiles.length > 0 && data?.id) {
+                    toast.info(
+                        `Uploading ${pendingPdfFiles.length} PDF file(s)...`
+                    );
+                    try {
+                        for (const file of pendingPdfFiles) {
+                            const formData = new FormData();
+                            formData.append("file", file);
+                            formData.append("agentId", data.id);
+
+                            const response = await fetch("/api/rag-pdf", {
+                                method: "POST",
+                                body: formData,
+                            });
+
+                            if (!response.ok) {
+                                throw new Error(
+                                    `Failed to upload ${file.name}`
+                                );
+                            }
+                        }
+                        toast.success("PDF file(s) uploaded successfully!");
+                        setPendingPdfFiles([]);
+                    } catch (error) {
+                        toast.error(
+                            error instanceof Error
+                                ? error.message
+                                : "Failed to upload PDF files"
+                        );
+                    }
+                }
+
                 onSuccess?.();
             },
             onError: (error) => {
@@ -113,6 +147,7 @@ export const AgentForm = ({
     const [showYoutubeUrl, setShowYoutubeUrl] = useState(false);
     const [showWebsiteUrl, setShowWebsiteUrl] = useState(false);
     const [showPdfUpload, setShowPdfUpload] = useState(false);
+    const [pendingPdfFiles, setPendingPdfFiles] = useState<File[]>([]);
 
     // Handle Groq API call to enhance instructions
     const handleEnhanceInstructions = async () => {
@@ -465,6 +500,8 @@ export const AgentForm = ({
                                     }
                                     sourceType="pdf"
                                     agentId={initialValues?.id}
+                                    pendingPdfFiles={pendingPdfFiles}
+                                    onPendingPdfFilesChange={setPendingPdfFiles}
                                 />
                             </div>
                         )}
