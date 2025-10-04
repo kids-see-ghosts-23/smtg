@@ -41,6 +41,7 @@ const formSchema = z
 export const SignUpView = () => {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
     const [pending, setPending] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -55,6 +56,7 @@ export const SignUpView = () => {
 
     const onSubmit = (data: z.infer<typeof formSchema>) => {
         setError(null);
+        setSuccess(null);
         setPending(true);
 
         authClient.signUp.email(
@@ -67,7 +69,13 @@ export const SignUpView = () => {
             {
                 onSuccess: () => {
                     setPending(false);
-                    router.push("/");
+                    setSuccess(
+                        "Account created successfully! Please check your email to verify your account before signing in."
+                    );
+                    // Don't redirect immediately, let them read the message
+                    setTimeout(() => {
+                        router.push("/sign-in");
+                    }, 3000);
                 },
                 onError: ({ error }) => {
                     setPending(false);
@@ -194,6 +202,14 @@ export const SignUpView = () => {
                                         )}
                                     />
                                 </div>
+                                {!!success && (
+                                    <Alert className="bg-green-50 border-green-200">
+                                        <OctagonAlertIcon className="h-4 w-4 !text-green-600" />
+                                        <AlertTitle className="text-green-800">
+                                            {success}
+                                        </AlertTitle>
+                                    </Alert>
+                                )}
                                 {!!error && (
                                     <Alert className="bg-destructive/10 border-none">
                                         <OctagonAlertIcon className="h-4 w-4 !text-destructive" />
@@ -255,12 +271,9 @@ export const SignUpView = () => {
                             width={190}
                             height={110}
                         />
-                        
                     </div>
                 </CardContent>
             </Card>
-
-            
         </div>
     );
 };

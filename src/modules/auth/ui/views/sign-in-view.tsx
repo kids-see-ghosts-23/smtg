@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { authClient } from "@/lib/auth-client";
 
 import Link from "next/link";
@@ -34,6 +34,8 @@ export const SignInView = () => {
     const router = useRouter();
     const [error, setError] = useState<string | null>(null);
     const [pending, setPending] = useState(false);
+    const [verificationNeeded, setVerificationNeeded] = useState(false);
+    const [verificationSent, setVerificationSent] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -45,6 +47,8 @@ export const SignInView = () => {
 
     const onSubmit = (data: z.infer<typeof formSchema>) => {
         setError(null);
+        setVerificationNeeded(false);
+        setVerificationSent(false);
         setPending(true);
 
         authClient.signIn.email(
@@ -60,10 +64,42 @@ export const SignInView = () => {
                 },
                 onError: ({ error }) => {
                     setPending(false);
-                    setError(error.message);
+                    if (error.status === 403) {
+                        setVerificationNeeded(true);
+                        setError(
+                            "Please verify your email address. Check your inbox for a verification link."
+                        );
+                    } else {
+                        setError(error.message);
+                    }
                 },
             }
         );
+    };
+
+    const handleResendVerification = async () => {
+        const email = form.getValues("email");
+        if (!email) {
+            setError("Please enter your email address");
+            return;
+        }
+
+        setPending(true);
+        setVerificationSent(false);
+        try {
+            await authClient.sendVerificationEmail({
+                email,
+                callbackURL: "/",
+            });
+            setVerificationNeeded(false);
+            setVerificationSent(true);
+            setError(null);
+        } catch {
+            setError("Failed to send verification email. Please try again.");
+            setVerificationNeeded(true);
+        } finally {
+            setPending(false);
+        }
     };
 
     const onSocial = (provider: "google" | "github") => {
@@ -141,10 +177,69 @@ export const SignInView = () => {
                                         )}
                                     />
                                 </div>
+                                {verificationSent && (
+                                    <Alert className="bg-green-50 border-green-200 dark:bg-green-950/20 dark:border-green-900">
+                                        <OctagonAlertIcon className="h-4 w-4 text-green-600 dark:text-green-500" />
+                                        <AlertTitle className="text-green-900 dark:text-green-400">
+                                            Verification Email Sent!
+                                        </AlertTitle>
+                                        <AlertDescription className="text-green-800 dark:text-green-300">
+                                            Please check your inbox and spam
+                                            folder for the verification link.
+                                        </AlertDescription>
+                                    </Alert>
+                                )}
                                 {!!error && (
-                                    <Alert className="bg-destructive/10 border-none">
-                                        <OctagonAlertIcon className="h-4 w-4 !text-destructive" />
-                                        <AlertTitle>{error}</AlertTitle>
+                                    <Alert
+                                        className={
+                                            verificationNeeded
+                                                ? "bg-amber-50 border-amber-200 dark:bg-amber-950/20 dark:border-amber-900"
+                                                : "bg-destructive/10 border-destructive/20"
+                                        }
+                                    >
+                                        <OctagonAlertIcon
+                                            className={
+                                                verificationNeeded
+                                                    ? "h-4 w-4 text-amber-600 dark:text-amber-500"
+                                                    : "h-4 w-4 text-destructive"
+                                            }
+                                        />
+                                        <AlertTitle
+                                            className={
+                                                verificationNeeded
+                                                    ? "text-amber-900 dark:text-amber-400"
+                                                    : "text-destructive"
+                                            }
+                                        >
+                                            {verificationNeeded
+                                                ? "Email Verification Required"
+                                                : "Error"}
+                                        </AlertTitle>
+                                        <AlertDescription
+                                            className={
+                                                verificationNeeded
+                                                    ? "text-amber-800 dark:text-amber-300"
+                                                    : "text-destructive"
+                                            }
+                                        >
+                                            {error}
+                                            {verificationNeeded && (
+                                                <div className="mt-3">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="border-amber-300 text-amber-900 hover:bg-amber-100 dark:border-amber-800 dark:text-amber-400 dark:hover:bg-amber-950"
+                                                        onClick={
+                                                            handleResendVerification
+                                                        }
+                                                        disabled={pending}
+                                                    >
+                                                        Resend Verification
+                                                        Email
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </AlertDescription>
                                     </Alert>
                                 )}
                                 <Button
@@ -195,6 +290,15 @@ export const SignInView = () => {
                                         Sign Up
                                     </Link>
                                 </div>
+                                <div className="text-center text-sm">
+                                    Need to verify your email?{" "}
+                                    <Link
+                                        href="/resend-verification"
+                                        className="underline underline-offset-5"
+                                    >
+                                        Resend Verification
+                                    </Link>
+                                </div>
                             </div>
                         </form>
                     </Form>
@@ -206,12 +310,9 @@ export const SignInView = () => {
                             src="/logo1.png"
                             alt="image"
                         />
-                      
                     </div>
                 </CardContent>
             </Card>
-
-            
         </div>
     );
 };

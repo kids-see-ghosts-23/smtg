@@ -579,6 +579,355 @@ Note: The meeting host can start the meeting at any time. The scheduled time is 
         return `https://calendar.google.com/calendar/render?${params.toString()}`;
     }
 
+    // Generate HTML template for email verification
+    generateVerificationHTML(
+        userName: string,
+        verificationUrl: string
+    ): string {
+        return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Verify Your Email</title>
+          <style>
+            * {
+              box-sizing: border-box;
+            }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif; 
+              line-height: 1.6; 
+              color: #374151; 
+              max-width: 600px; 
+              margin: 0 auto; 
+              padding: 20px; 
+              background-color: #f9fafb;
+            }
+            .container {
+              background: white;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+              border: 1px solid #e5e7eb;
+            }
+            .header { 
+              background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+              color: white;
+              padding: 40px 30px; 
+              text-align: center;
+            }
+            .icon {
+              width: 60px;
+              height: 60px;
+              background: rgba(255, 255, 255, 0.2);
+              border-radius: 50%;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              margin-bottom: 20px;
+              font-size: 30px;
+            }
+            .title { 
+              margin: 0; 
+              font-size: 28px;
+              font-weight: 700;
+              letter-spacing: -0.02em;
+            }
+            .content-section {
+              padding: 40px 30px;
+            }
+            .greeting {
+              font-size: 18px;
+              color: #1f2937;
+              margin-bottom: 20px;
+            }
+            .message {
+              font-size: 16px;
+              color: #4b5563;
+              line-height: 1.7;
+              margin-bottom: 30px;
+            }
+            .cta-button {
+              display: inline-block;
+              padding: 16px 40px;
+              background: #16a34a;
+              color: white;
+              text-decoration: none;
+              border-radius: 8px;
+              font-weight: 600;
+              font-size: 16px;
+              box-shadow: 0 4px 6px rgba(22, 163, 74, 0.3);
+              transition: all 0.2s;
+            }
+            .cta-button:hover {
+              background: #15803d;
+              box-shadow: 0 6px 8px rgba(22, 163, 74, 0.4);
+            }
+            .cta-section {
+              text-align: center;
+              margin: 30px 0;
+            }
+            .divider {
+              border: none;
+              border-top: 1px solid #e5e7eb;
+              margin: 30px 0;
+            }
+            .alternative {
+              font-size: 14px;
+              color: #6b7280;
+              margin-top: 20px;
+            }
+            .url-text {
+              background: #f3f4f6;
+              padding: 12px;
+              border-radius: 6px;
+              word-break: break-all;
+              font-size: 13px;
+              color: #4b5563;
+              margin-top: 10px;
+            }
+            .footer { 
+              background: #f9fafb;
+              padding: 25px 30px; 
+              border-top: 1px solid #e5e7eb; 
+              text-align: center;
+            }
+            .footer p {
+              margin: 0 0 8px 0;
+              font-size: 13px;
+              color: #6b7280;
+            }
+            @media (max-width: 600px) {
+              body { padding: 10px; }
+              .header { padding: 30px 20px; }
+              .content-section { padding: 30px 20px; }
+              .title { font-size: 24px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="icon">✉️</div>
+              <h1 class="title">Verify Your Email</h1>
+            </div>
+            
+            <div class="content-section">
+              <p class="greeting">Hi ${userName},</p>
+              
+              <p class="message">
+                Thanks for signing up! Please verify your email address to activate your account and get started.
+              </p>
+
+              <div class="cta-section">
+                <a href="${verificationUrl}" class="cta-button">Verify Email Address</a>
+              </div>
+
+              <hr class="divider" />
+
+              <div class="alternative">
+                <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+                <div class="url-text">${verificationUrl}</div>
+              </div>
+
+              <hr class="divider" />
+
+              <p style="font-size: 14px; color: #6b7280;">
+                If you didn't create an account with us, you can safely ignore this email.
+              </p>
+            </div>
+            
+            <div class="footer">
+              <p>This is an automated message from our platform.</p>
+              <p>Please do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    }
+
+    // Generate HTML template for password reset
+    generatePasswordResetHTML(userName: string, resetUrl: string): string {
+        return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <title>Reset Your Password</title>
+          <style>
+            * {
+              box-sizing: border-box;
+            }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif; 
+              line-height: 1.6; 
+              color: #374151; 
+              max-width: 600px; 
+              margin: 0 auto; 
+              padding: 20px; 
+              background-color: #f9fafb;
+            }
+            .container {
+              background: white;
+              border-radius: 12px;
+              overflow: hidden;
+              box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+              border: 1px solid #e5e7eb;
+            }
+            .header { 
+              background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+              color: white;
+              padding: 40px 30px; 
+              text-align: center;
+            }
+            .icon {
+              width: 60px;
+              height: 60px;
+              background: rgba(255, 255, 255, 0.2);
+              border-radius: 50%;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              margin-bottom: 20px;
+              font-size: 30px;
+            }
+            .title { 
+              margin: 0; 
+              font-size: 28px;
+              font-weight: 700;
+              letter-spacing: -0.02em;
+            }
+            .content-section {
+              padding: 40px 30px;
+            }
+            .greeting {
+              font-size: 18px;
+              color: #1f2937;
+              margin-bottom: 20px;
+            }
+            .message {
+              font-size: 16px;
+              color: #4b5563;
+              line-height: 1.7;
+              margin-bottom: 30px;
+            }
+            .warning-box {
+              background: #fef3c7;
+              border-left: 4px solid #f59e0b;
+              padding: 15px;
+              margin: 20px 0;
+              border-radius: 6px;
+            }
+            .warning-box p {
+              margin: 0;
+              color: #78350f;
+              font-size: 14px;
+            }
+            .cta-button {
+              display: inline-block;
+              padding: 16px 40px;
+              background: #dc2626;
+              color: white;
+              text-decoration: none;
+              border-radius: 8px;
+              font-weight: 600;
+              font-size: 16px;
+              box-shadow: 0 4px 6px rgba(220, 38, 38, 0.3);
+              transition: all 0.2s;
+            }
+            .cta-button:hover {
+              background: #b91c1c;
+              box-shadow: 0 6px 8px rgba(220, 38, 38, 0.4);
+            }
+            .cta-section {
+              text-align: center;
+              margin: 30px 0;
+            }
+            .divider {
+              border: none;
+              border-top: 1px solid #e5e7eb;
+              margin: 30px 0;
+            }
+            .alternative {
+              font-size: 14px;
+              color: #6b7280;
+              margin-top: 20px;
+            }
+            .url-text {
+              background: #f3f4f6;
+              padding: 12px;
+              border-radius: 6px;
+              word-break: break-all;
+              font-size: 13px;
+              color: #4b5563;
+              margin-top: 10px;
+            }
+            .footer { 
+              background: #f9fafb;
+              padding: 25px 30px; 
+              border-top: 1px solid #e5e7eb; 
+              text-align: center;
+            }
+            .footer p {
+              margin: 0 0 8px 0;
+              font-size: 13px;
+              color: #6b7280;
+            }
+            @media (max-width: 600px) {
+              body { padding: 10px; }
+              .header { padding: 30px 20px; }
+              .content-section { padding: 30px 20px; }
+              .title { font-size: 24px; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <div class="icon">🔒</div>
+              <h1 class="title">Reset Your Password</h1>
+            </div>
+            
+            <div class="content-section">
+              <p class="greeting">Hi ${userName},</p>
+              
+              <p class="message">
+                We received a request to reset your password. Click the button below to choose a new password.
+              </p>
+
+              <div class="cta-section">
+                <a href="${resetUrl}" class="cta-button">Reset Password</a>
+              </div>
+
+              <div class="warning-box">
+                <p><strong>⚠️ Security Notice:</strong> This link will expire in 1 hour for security reasons.</p>
+              </div>
+
+              <hr class="divider" />
+
+              <div class="alternative">
+                <p>If the button above doesn't work, copy and paste this link into your browser:</p>
+                <div class="url-text">${resetUrl}</div>
+              </div>
+
+              <hr class="divider" />
+
+              <p style="font-size: 14px; color: #6b7280;">
+                If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
+              </p>
+            </div>
+            
+            <div class="footer">
+              <p>This is an automated message from our platform.</p>
+              <p>Please do not reply to this email.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    }
+
     // Generate HTML template for meeting invitation
     private generateInvitationHTML({
         meetingName,
