@@ -28,6 +28,7 @@ import Link from "next/link";
 interface Props {
     meetingId: string;
     meetingName: string;
+    meetingStatus: string;
     onEdit: () => void;
     onRemove: () => void;
 }
@@ -35,9 +36,11 @@ interface Props {
 export const MeetingIdViewHeader = ({
     meetingId,
     meetingName,
+    meetingStatus,
     onEdit,
     onRemove,
 }: Props) => {
+    const isUpcoming = meetingStatus === "upcoming";
     return (
         <div className="flex items-center justify-between">
             <Breadcrumb>
@@ -63,16 +66,20 @@ export const MeetingIdViewHeader = ({
                 </BreadcrumbList>
             </Breadcrumb>
             <div className="flex items-center gap-2">
-                {/* Send Invitation Button */}
-                <SendInvitationDialog
-                    meetingId={meetingId}
-                    meetingName={meetingName}
-                >
-                    <Button variant="outline" size="sm">
-                        <MailIcon className="size-4" />
-                        <span className="hidden sm:inline ml-2">Send Invitation</span>
-                    </Button>
-                </SendInvitationDialog>
+                {/* Send Invitation Button - Only show for upcoming meetings */}
+                {isUpcoming && (
+                    <SendInvitationDialog
+                        meetingId={meetingId}
+                        meetingName={meetingName}
+                    >
+                        <Button variant="outline" size="sm">
+                            <MailIcon className="size-4" />
+                            <span className="hidden sm:inline ml-2">
+                                Send Invitation
+                            </span>
+                        </Button>
+                    </SendInvitationDialog>
+                )}
 
                 {/* wihtout modal false, dialog becomes unclickable */}
                 <DropdownMenu modal={false}>

@@ -78,6 +78,7 @@ export const MeetingIdView = ({ meetingId }: Props) => {
                 <MeetingIdViewHeader
                     meetingId={meetingId}
                     meetingName={data.name}
+                    meetingStatus={data.status}
                     onEdit={() => setUpdateMeetingDialogOpen(true)}
                     onRemove={handleRemoveMeeting}
                 />

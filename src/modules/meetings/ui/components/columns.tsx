@@ -10,17 +10,12 @@ import {
     ClockFadingIcon,
     CornerDownRightIcon,
     LoaderIcon,
-    MailIcon,
 } from "lucide-react";
 import { cn, formatDuration } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { SendInvitationDialog } from "@/components/send-invitation-dialog";
 
 // This type is used to define the shape of our data.
 // can use a Zod schema here if needed
-
-
 
 const statusIconMap = {
     upcoming: ClockArrowUpIcon,
@@ -109,33 +104,10 @@ export const columns: ColumnDef<MeetingGetMany[number]>[] = [
                     className="capitalize [&>svg]:size-4 flex items-center gap-x-2"
                 >
                     <ClockFadingIcon className="text-blue-700 " />
-                    {row.original.duration ? formatDuration(row.original.duration) : "No duration"}
+                    {row.original.duration
+                        ? formatDuration(row.original.duration)
+                        : "No duration"}
                 </Badge>
-            );
-        },
-    },
-    {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-            const meeting = row.original;
-            
-            return (
-                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                    <SendInvitationDialog
-                        meetingId={meeting.id}
-                        meetingName={meeting.name}
-                    >
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                        >
-                            <MailIcon className="h-4 w-4" />
-                            <span className="sr-only">Send invitation</span>
-                        </Button>
-                    </SendInvitationDialog>
-                </div>
             );
         },
     },
