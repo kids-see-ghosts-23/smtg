@@ -20,15 +20,38 @@ import {
 
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { GeneratedAvatar } from "@/components/generated-avatar";
-import { ChevronDownIcon, CreditCardIcon, LogOutIcon, LinkIcon } from "lucide-react";
+import {
+    ChevronDownIcon,
+    CreditCardIcon,
+    LogOutIcon,
+    LinkIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { useEffect } from "react";
 
 export const DashboardUserButton = () => {
     const { data, isPending } = authClient.useSession();
     const isMobile = useIsMobile();
     const router = useRouter();
+
+    useEffect(() => {
+        const handler = (e: MessageEvent) => {
+            if (e.data?.access_token) {
+                localStorage.setItem("notionToken", e.data.access_token);
+                if (e.data.page?.id) {
+                    localStorage.setItem("notionPageId", e.data.page.id);
+                }
+                alert(
+                    `✅ Connected! Saved token & page ${e.data.page?.id ?? ""}`
+                );
+            }
+        };
+        window.addEventListener("message", handler);
+        return () => window.removeEventListener("message", handler);
+    }, []);
+
     const onLogout = () => {
         authClient.signOut({
             fetchOptions: {
@@ -145,7 +168,7 @@ export const DashboardUserButton = () => {
                     </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                     className="cursor-pointer flex items-center justify-between"
                     onClick={connectToNotion}
                 >
