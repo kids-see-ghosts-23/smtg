@@ -100,6 +100,77 @@ graph TD
     A -.-> K
 ```
 
+## System Workflow
+
+```mermaid
+graph LR
+    A[Client Application] --> B[Next.js API Routes]
+    A --> C[TRPC Client]
+    
+    B --> D[Webhook Handler]
+    B --> E[Auth Handler]
+    B --> F[Meeting API]
+    B --> G[Email API]
+    B --> H[TRPC API]
+    B --> I[Inngest API]
+    
+    C --> J[TRPC Server]
+    
+    J --> K[Agents Router]
+    J --> L[Meetings Router]
+    
+    K --> M[Database Queries]
+    K --> N[Stream Services]
+    L --> M
+    L --> N
+    L --> O[Inngest Events]
+    
+    D --> P[Stream.io Events]
+    D --> M
+    D --> O
+    
+    H --> J
+    
+    M --> Q[PostgreSQL Database]
+    N --> R[Stream Video/Chat]
+    N --> S[OpenAI API]
+    O --> T[Inngest Functions]
+    
+    T --> M
+    T --> U[Email Service]
+    
+    subgraph "External Services"
+        R
+        S
+        U
+    end
+    
+    subgraph "Application Layer"
+        A
+        B
+        C
+        D
+        E
+        F
+        G
+        H
+        I
+        J
+        K
+        L
+    end
+    
+    subgraph "Data Layer"
+        M
+        Q
+    end
+    
+    subgraph "Background Processing"
+        O
+        T
+    end
+```
+
 ## Key Components
 
 ### Inngest Background Processing
