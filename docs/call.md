@@ -25,6 +25,11 @@ src/app/call/
     └── page.tsx                  # Dynamic call page route
 ```
 
+![Call Lobby](../screenshots/Call%20Lobby.png)
+![Call Interface](../screenshots/Meeting.png)
+![Call Ended](../screenshots/Call%20Ended.png)
+![Share Screen](../screenshots/Share%20Screen.png)
+
 ---
 
 ## Call Flow Architecture
@@ -166,7 +171,7 @@ call.microphone.disable(); // Start with mic off
 
 **State Transitions**:
 
-```typescript
+```
 lobby → (join) → active → (leave) → ended
 ```
 

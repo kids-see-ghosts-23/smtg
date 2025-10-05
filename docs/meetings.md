@@ -6,6 +6,12 @@ The Meetings module manages the complete lifecycle of meetings within the SMTG a
 
 Meetings in SMTG are AI-enhanced video conferences where users can interact with specialized AI agents. Each meeting features automatic transcription, recording, and AI-powered summarization. The module handles the entire workflow from creation to post-meeting analysis.
 
+![Meeting Form](../screenshots/meeting%20form.png)
+![Meeting Lobby](../screenshots/Meeting%20Lobby.png)
+![Meeting Interface](../screenshots/Meeting.png)
+![Meeting Ended](../screenshots/Call%20Ended.png)
+![Meeting Summary](../screenshots/Summary.png)
+
 ## Table of Contents
 
 -   [Module Structure](#module-structure)

@@ -6,6 +6,9 @@ The Agents module manages AI agents within the SMTG application. Agents are AI p
 
 Agents are user-created AI participants that can join meetings and interact based on customized instructions. Each agent can have specialized knowledge through various content sources and participates in meetings using the Stream Video API.
 
+![Agent Form](../screenshots/Agent%20form.png)
+![Agent Form Extended](../screenshots/Agent%20Form%20extended.png)
+
 ## Table of Contents
 
 -   [Agents Module Structure](#agents-module-structure)
@@ -728,7 +731,7 @@ const { data } = useSuspenseQuery(trpc.agents.getMany.queryOptions(filters));
 
 ### Processing a PDF Document
 
-```typescript
+```
 // In an API route or server action
 import { RAGService } from "@/modules/agents/services/rag-service";
 
@@ -752,7 +755,7 @@ export async function uploadPDF(formData: FormData) {
 
 ### Querying Agent Knowledge
 
-```typescript
+```
 import { RAGService } from "@/modules/agents/services/rag-service";
 
 // Find relevant context for a user's question

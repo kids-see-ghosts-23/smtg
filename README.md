@@ -119,29 +119,7 @@ graph TD
 
 ## Workflow
 
-```mermaid
-graph LR
-    A[Authentication] --> B[Create AI Agent]
-    B --> C[Configure Agent Knowledge]
-    C --> D[Schedule Meeting]
-    D --> E[Join Meeting]
-    E --> F[Interact with AI Agent]
-    F --> G[Meeting Recording]
-    G --> H[Automatic Transcription]
-    H --> I[AI Summary Generation]
-    I --> J[Export Options]
-    
-    style A fill:#e1f5fe
-    style B fill:#f3e5f5
-    style C fill:#e8f5e8
-    style D fill:#fff3e0
-    style E fill:#fce4ec
-    style F fill:#f1f8e9
-    style G fill:#e0f2f1
-    style H fill:#efebe9
-    style I fill:#fce4ec
-    style J fill:#fff8e1
-```
+![Workflow](screenshots/workflow.png)
 
 The typical workflow for using SMTG involves several key steps:
 
@@ -194,44 +172,14 @@ Understanding the operational costs of running SMTG is important for planning an
   - Real-time response generation
   - Summary creation and refinement
 
-### Inngest Processing Costs
-- **Event Processing**: Minimal cost for background job processing
-- **Features**:
-  - Automated meeting summarization
-  - Retry logic for failed operations
-  - Scalable worker processes
-
-### Stream.io Costs
-- **Video & Chat Services**: Based on usage and participant count
-- **Features**:
-  - Real-time video communication
-  - Chat functionality during meetings
-  - Recording and storage
-
-### Database & Infrastructure
-- **Neon PostgreSQL**: Tiered pricing based on usage
-- **Features**:
-  - Data persistence for meetings and agents
-  - Vector storage for RAG implementation
-  - Scalable database operations
-
-### Cost Optimization Strategies
-1. **Batch Processing**: Process multiple summaries together to reduce API calls
-2. **Caching**: Cache frequently accessed agent configurations
-3. **Selective Transcription**: Only transcribe when necessary for specific features
-4. **Efficient Prompts**: Optimize prompts to reduce token usage while maintaining quality
 
 ## Submissions
 
 ### Project Resources
-- [GitHub Repository](https://github.com/your-username/smtg) - Main code repository
+- [GitHub Repository](https://github.com/vishruthmd/smtg) - Main code repository
 - [Project Documentation](./docs/SUMMARY.md) - Complete documentation overview
-
-### Demo Videos
-- [Main Demo Video](#) - Comprehensive walkthrough of the application
-- [Agent Creation](#) - How to create and customize AI agents
-- [Meeting Flow](#) - Step-by-step meeting process demonstration
-- [RAG Implementation](#) - Demonstration of PDF document integration
+- [Project Website](https://smtg-5idiots.vercel.app) - Live demo and documentation
+- [Project Video](https://www.youtube.com/watch?v=_5X_Y5X_Y5X) - Demonstration video
 
 ### Technical Documentation
 - [API Documentation](./docs/api.md) - Detailed API endpoints documentation
@@ -250,10 +198,11 @@ Understanding the operational costs of running SMTG is important for planning an
 
 ### Quick Setup
 1. Clone the repository
-2. Install dependencies: `npm install`
+2. Install dependencies: `npm install --legacy-peer-deps`
 3. Set up environment variables (see `.env.example`)
 4. Run database migrations: `npm run db:push`
-5. Start development server: `npm run dev`
+5. View your database : `npm run db:studio`
+6. Start development server: `npm run dev`
 
 ## Performance
 
@@ -264,6 +213,8 @@ Understanding the operational costs of running SMTG is important for planning an
 | Meeting Setup | 120ms | 250ms |
 | Real-time Transcription | <50ms | 100ms |
 | Summary Generation | 2.5s | 4.2s |
+
+
 
 ### Scalability Metrics
 - **Concurrent Users**: Supports up to 10,000 simultaneous users
