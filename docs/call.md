@@ -35,9 +35,15 @@ src/app/call/
 ## Call Flow Architecture
 
 ```mermaid
-User → CallView → CallProvider → CallConnect → CallUI
-                                              ↓
-                                    Lobby → Active → Ended
+sequenceDiagram
+    User->>CallView: initiates
+    CallView->>CallProvider: setup
+    CallProvider->>CallConnect: connect
+    CallConnect->>CallUI: render UI
+    CallUI->>Lobby: wait
+    Lobby->>Active: start call
+    Active->>Ended: end call
+
 ```
 
 ### Flow Sequence
