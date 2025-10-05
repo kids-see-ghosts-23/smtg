@@ -206,20 +206,17 @@ Understanding the operational costs of running SMTG is important for planning an
 
 ## Performance
 
-### Response Times
-| Operation | Average Time | 95th Percentile |
-|----------|-------------|----------------|
-| Agent Creation | 180ms | 320ms |
-| Meeting Setup | 120ms | 250ms |
-| Real-time Transcription | <50ms | 100ms |
-| Summary Generation | 2.5s | 4.2s |
+### Asynchronous Processing with Inngest
 
+The application leverages Inngest for handling long-running tasks asynchronously, ensuring the user interface remains responsive while background processing occurs.
 
+![Inngest Workflow](./screenshots/Inngest.png)
 
-### Scalability Metrics
-- **Concurrent Users**: Supports up to 10,000 simultaneous users
-- **Meeting Capacity**: 500 concurrent meetings
-- **Agent Responses**: <200ms average response time
+Key performance benefits of using Inngest:
+- **Non-blocking Operations**: Summary generation and document processing happen in the background
+- **Reliable Execution**: Guaranteed task completion with automatic retries
+- **Scalable Processing**: Tasks automatically distributed across available resources
+- **Real-time Monitoring**: Track processing status and identify bottlenecks
 
 ## Documentation
 
