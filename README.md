@@ -160,27 +160,28 @@ The typical workflow for using SMTG involves several key steps:
 
 This section showcases the application's user interface and key features through screenshots:
 
-<!-- To add screenshots, place images in a 'screenshots' folder and use the format below: -->
+### Login Screen
+![Login Screen](screenshots/Login.png)
+*The authentication screen for accessing the SMTG platform*
 
-<!-- ### Dashboard Overview -->
-<!-- ![Dashboard](screenshots/dashboard.png) -->
-<!-- *The main dashboard showing upcoming meetings and AI agents* -->
+### AI Agent Creation
+![Agent Form](screenshots/Agent%20form.png)
+*Creating a specialized AI agent with custom instructions*
 
-<!-- ### AI Agent Creation -->
-<!-- ![Agent Creation](screenshots/agent-creation.png) -->
-<!-- *Creating a specialized AI agent with custom instructions* -->
+![Extended Agent Form](screenshots/Agent%20Form%20extended.png)
+*Detailed configuration options for AI agents*
 
-<!-- ### Meeting Interface -->
-<!-- ![Meeting](screenshots/meeting-interface.png) -->
-<!-- *Real-time video call interface with AI agent* -->
+### Meeting Setup
+![Meeting Form](screenshots/meeting%20form.png)
+*Scheduling a meeting with a specific AI agent*
 
-<!-- ### Meeting Summary -->
-<!-- ![Summary](screenshots/meeting-summary.png) -->
-<!-- *AI-generated meeting summary with key points and action items* -->
+### Meeting Interface
+![Meeting Interface](screenshots/Meeting.png)
+*Real-time video call interface with AI agent*
 
-<!-- ### Knowledge Configuration -->
-<!-- ![Knowledge](screenshots/knowledge-configuration.png) -->
-<!-- *Configuring agent knowledge through documents and instructions* -->
+### Meeting Summary
+![Summary](screenshots/Summary.png)
+*AI-generated meeting summary with key points and action items*
 
 ## Pricing & Costs
 
