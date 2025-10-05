@@ -203,7 +203,7 @@ Understanding the operational costs of running SMTG is important for planning an
 - OpenAI API key
 - Inngest account
 
-### Quick Setup
+### Quick Setup - recommended to use hosted link instead
 1. Clone the repository
 2. Install dependencies: `npm install --legacy-peer-deps`
 3. Complete setup of Ngrok URL
