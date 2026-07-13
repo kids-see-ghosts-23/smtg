@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import { EmailService } from "@/lib/email";
+import { auth } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
     try {
+        // Authentication check
+        const session = await auth.api.getSession({
+            headers: request.headers,
+        });
+
+        if (!session) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
         const { to, meetingName, summary, agentName, date, duration } = body;
 

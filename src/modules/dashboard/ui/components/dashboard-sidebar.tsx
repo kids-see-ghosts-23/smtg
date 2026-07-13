@@ -1,5 +1,5 @@
 "use client";
-import { BotIcon, StarIcon, VideoIcon } from "lucide-react";
+import { BotIcon, ShieldCheck, StarIcon, VideoIcon } from "lucide-react";
 
 import {
     Sidebar,
@@ -31,6 +31,11 @@ const firstSection = [
         icon: BotIcon,
         label: "Agents",
         href: "/agents",
+    },
+    {
+        icon: ShieldCheck,
+        label: "Crypto Lab",
+        href: "/crypto-lab",
     },
 ];
 const secondSection = [

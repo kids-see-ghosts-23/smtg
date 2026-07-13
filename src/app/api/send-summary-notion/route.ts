@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Client } from "@notionhq/client";
 import { BlockObjectRequest } from "@notionhq/client/build/src/api-endpoints";
+import { auth } from "@/lib/auth";
 
 type RichTextItem = {
     type: "text";
@@ -184,6 +185,18 @@ function parseInlineFormatting(text: string): RichTextItem[] {
 
 export async function POST(request: NextRequest) {
     try {
+        // Authentication check
+        const session = await auth.api.getSession({
+            headers: request.headers,
+        });
+
+        if (!session) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
         const {
             notionToken,

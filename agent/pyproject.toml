@@ -1,0 +1,12 @@
+[project]
+name = "meeting-agent"
+version = "0.1.0"
+description = "Vision Agents worker that joins Stream calls with OpenAI Realtime GA"
+requires-python = ">=3.12"
+dependencies = [
+    "vision-agents[getstream,openai]",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-dotenv>=1.0",
+    "pydantic>=2.0",
+]

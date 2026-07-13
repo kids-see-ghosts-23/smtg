@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
     try {
+        // Authentication check
+        const session = await auth.api.getSession({
+            headers: request.headers,
+        });
+
+        if (!session) {
+            return NextResponse.json(
+                { error: "Unauthorized" },
+                { status: 401 }
+            );
+        }
+
         const { repoUrl } = await request.json();
 
         if (!repoUrl) {

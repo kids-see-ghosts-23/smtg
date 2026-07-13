@@ -1,17 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { auth } from "@/lib/auth";
 
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+// Maximum allowed text length to prevent abuse
+const MAX_TEXT_LENGTH = 5000;
+
 export async function POST(req: NextRequest) {
   try {
+    // Authentication check - prevent unauthorized API usage
+    const session = await auth.api.getSession({
+      headers: req.headers,
+    });
+
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
     const { text } = await req.json();
 
     if (!text) {
       return NextResponse.json(
         { error: "Text is required" },
+        { status: 400 }
+      );
+    }
+
+    // Prevent abuse by limiting input size
+    if (text.length > MAX_TEXT_LENGTH) {
+      return NextResponse.json(
+        { error: `Text too long. Maximum ${MAX_TEXT_LENGTH} characters allowed.` },
         { status: 400 }
       );
     }

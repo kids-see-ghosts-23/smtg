@@ -102,130 +102,53 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const call = streamVideo.video.call("default", meetingId);
-
-        console.log("Attempting to connect OpenAI for meeting:", meetingId);
+        console.log("Triggering AI agent to join meeting:", meetingId);
         console.log("Agent ID:", existingAgent.id);
-        console.log("OpenAI API Key exists:", !!process.env.OPENAI_API_KEY);
 
-        // Test OpenAI connection first
+        // Enhance the agent's instructions with its RAG knowledge base
+        const instructions = await RAGService.enhanceInstructions(
+            existingAgent.id,
+            existingAgent.instructions ||
+                "You are a helpful AI assistant in a meeting. Listen to the conversation and respond when appropriate."
+        );
+
+        // Ask the Vision Agents worker (Python, OpenAI Realtime GA) to join the
+        // call. The worker connects as the agent user and streams audio.
         try {
-            const testResponse = await openaiClient.chat.completions.create({
-                messages: [{ role: "user", content: "Hello" }],
-                model: "gpt-4o",
-                max_tokens: 10,
-            });
-            console.log(
-                "OpenAI API test successful:",
-                !!testResponse.choices[0]?.message?.content
-            );
-        } catch (apiError) {
-            console.error("OpenAI API test failed:", apiError);
-            return NextResponse.json(
-                { error: "OpenAI API connection failed" },
-                { status: 500 }
-            );
-        }
+            const agentServiceUrl =
+                process.env.AGENT_SERVICE_URL || "http://localhost:8100";
 
-        try {
-            const realtimeClient = await streamVideo.video.connectOpenAi({
-                call,
-                openAiApiKey: process.env.OPENAI_API_KEY!,
-                agentUserId: existingAgent.id,
+            const res = await fetch(`${agentServiceUrl}/join`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    call_type: "default",
+                    call_id: meetingId,
+                    agent_id: existingAgent.id,
+                    agent_name: existingAgent.name,
+                    instructions,
+                }),
             });
 
-            console.log("OpenAI connection successful, updating session...");
-            console.log(
-                "Agent instructions length:",
-                existingAgent.instructions?.length || 0
-            );
+            if (!res.ok) {
+                const detail = await res.text();
+                console.error(
+                    "Agent worker failed to join:",
+                    res.status,
+                    detail
+                );
+                return NextResponse.json(
+                    { error: "Agent worker failed to join" },
+                    { status: 502 }
+                );
+            }
 
-            // Enhance instructions with RAG knowledge base
-            console.log("Enhancing instructions with RAG knowledge base...");
-            const instructions = await RAGService.enhanceInstructions(
-                existingAgent.id,
-                existingAgent.instructions ||
-                    "You are a helpful AI assistant in a meeting. Listen to the conversation and respond when appropriate."
-            );
-
-            console.log("Enhanced instructions length:", instructions.length);
-
-            // Add connection state logging
-            console.log("Realtime client state:", {
-                isConnected: !!realtimeClient,
-                hasUpdateSession:
-                    typeof realtimeClient.updateSession === "function",
-            });
-
-            await realtimeClient.updateSession({
-                instructions: instructions,
-                voice: "alloy",
-                input_audio_format: "pcm16",
-                output_audio_format: "pcm16",
-                input_audio_transcription: {
-                    model: "whisper-1",
-                },
-                turn_detection: {
-                    type: "server_vad",
-                    threshold: 0.5,
-                    prefix_padding_ms: 300,
-                    silence_duration_ms: 500,
-                },
-            });
-
-            console.log("Session updated with instructions and configuration");
-
-            // Add event listeners for debugging
-            realtimeClient.on("session.created", () => {
-                console.log("Realtime session created successfully");
-            });
-
-            realtimeClient.on("session.updated", () => {
-                console.log("Realtime session updated successfully");
-            });
-
-            realtimeClient.on(
-                "conversation.item.input_audio_transcription.completed",
-                (event: { transcript: string }) => {
-                    console.log(
-                        "Audio transcription completed:",
-                        event.transcript
-                    );
-                }
-            );
-
-            realtimeClient.on("response.audio.done", () => {
-                console.log("Audio response completed");
-            });
-
-            realtimeClient.on("error", (error: Error) => {
-                console.error("Realtime client error:", error);
-            });
-
-            // Try to send a test message to verify connection
-            setTimeout(() => {
-                console.log("Attempting to test realtime connection...");
-                try {
-                    realtimeClient.conversation.item.create({
-                        type: "message",
-                        role: "user",
-                        content: [
-                            {
-                                type: "input_text",
-                                text: "Hello, I'm testing the connection",
-                            },
-                        ],
-                    });
-                    console.log("Test message sent successfully");
-                } catch (testError) {
-                    console.error("Test message failed:", testError);
-                }
-            }, 2000);
+            console.log("Agent worker accepted join for meeting:", meetingId);
         } catch (error) {
-            console.error("Error connecting to OpenAI:", error);
+            console.error("Error reaching agent worker:", error);
             return NextResponse.json(
-                { error: "Failed to connect OpenAI agent" },
-                { status: 500 }
+                { error: "Could not reach agent worker" },
+                { status: 502 }
             );
         }
     } else if (eventType === "call.session_participant_joined") {
